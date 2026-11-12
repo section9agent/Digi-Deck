@@ -1,0 +1,65 @@
+[
+ {
+  "file": "01_Tape_guids.png",
+  "name": "Tape guids",
+  "x": 90,
+  "y": 839,
+  "w": 1424,
+  "h": 132,
+  "opacity": 1.0
+ },
+ {
+  "file": "03_Tape_Shell.png",
+  "name": "Tape Shell",
+  "x": 0,
+  "y": 0,
+  "w": 1600,
+  "h": 1027,
+  "opacity": 1.0
+ },
+ {
+  "file": "04_Tape_Label_Area.png",
+  "name": "Tape Label Area",
+  "x": 59,
+  "y": 76,
+  "w": 1482,
+  "h": 663,
+  "opacity": 1.0
+ },
+ {
+  "file": "05_Tape_Center.png",
+  "name": "Tape Center",
+  "x": 336,
+  "y": 291,
+  "w": 928,
+  "h": 276,
+  "opacity": 1.0
+ },
+ {
+  "file": "06_Tape_Center.png",
+  "name": "Tape Center",
+  "x": 362,
+  "y": 327,
+  "w": 876,
+  "h": 209,
+  "opacity": 1.0
+ },
+ {
+  "file": "08_Mesure.png",
+  "name": "Mesure",
+  "x": 642,
+  "y": 340,
+  "w": 305,
+  "h": 182,
+  "opacity": 1.0
+ },
+ {
+  "file": "09_Screws.png",
+  "name": "Screws",
+  "x": 24,
+  "y": 28,
+  "w": 1550,
+  "h": 968,
+  "opacity": 1.0
+ }
+]

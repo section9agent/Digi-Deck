@@ -1,0 +1,16 @@
+:root { color-scheme: dark; }
+body { margin: 0; padding: 22px 26px 30px; background: #14110f; color: #e8dfd2; font: 14px/1.45 system-ui, 'Segoe UI', sans-serif; }
+header { display: flex; gap: 16px; align-items: center; }
+h1 { margin: 0; font-size: 28px; letter-spacing: .5px; } h2 { margin: 0 0 8px; font-size: 13px; text-transform: uppercase; letter-spacing: 1.4px; color: #e0944a; }
+.sub { color: #a89c8b; font-size: 12px; } .by { margin-top: 4px; color: #f1e7d6; font-weight: 600; }
+.lead { color: #bdb1a0; margin: 14px 0 4px; }
+section { margin-top: 18px; padding-top: 14px; border-top: 1px solid #2c2620; }
+.donate { background: #1e1812; border: 1px solid #3a2e22; border-radius: 10px; padding: 14px 16px; }
+.donate p { margin: 0 0 10px; }
+button { background: #2a231c; color: #f1e7d6; border: 1px solid #4a3d2e; border-radius: 6px; padding: 7px 14px; font: inherit; cursor: pointer; }
+button:hover { background: #352c22; } button.pp { background: #ffc439; color: #111; border-color: #e0a800; font-weight: 700; }
+button.pp:hover { background: #ffb800; }
+.row { display: flex; gap: 14px; align-items: center; margin: 6px 0; }
+a { color: #e0944a; } ul { margin: 0; padding-left: 18px; } li { margin: 3px 0; } li small { color: #a89c8b; }
+.note { color: #a89c8b; font-size: 12px; }
+pre { max-height: 280px; overflow: auto; background: #0e0c0a; border: 1px solid #2c2620; padding: 10px; font-size: 11px; white-space: pre-wrap; margin-top: 8px; }

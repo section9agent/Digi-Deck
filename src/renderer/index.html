@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' file: data: blob: https: http:; media-src file: blob: ddmedia:; connect-src 'none'">
+  <title>Digi-Deck</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Mode picker (shown on launch) -->
+  <div id="picker" class="overlay picker">
+    <h1>Digi-Deck</h1>
+    <p>Pick how you want to listen</p>
+    <div class="cards">
+      <button class="mode-card" data-mode="vinyl">
+        <img class="ico-img" src="../../assets/menu/vinyl.png" alt="" draggable="false"><b>Vinyl</b><span>33⅓ / 45 rpm turntable, single LPs to box sets</span>
+      </button>
+      <button class="mode-card" data-mode="cd">
+        <img class="ico-img" src="../../assets/menu/cd.png" alt="" draggable="false"><b>CD</b><span>Portable CD player, 3" and 5" discs</span>
+      </button>
+      <button class="mode-card" data-mode="cassette">
+        <img class="ico-img cas" src="../../assets/menu/cassette.png" alt="" draggable="false"><b>Cassette</b><span>Full-view tape deck, up to 90 minutes a tape</span>
+      </button>
+    </div>
+    <h2 class="niche-h">Niche formats <small>coming soon</small></h2>
+    <div class="cards niche">
+      <button class="mode-card mini" disabled title="Coming soon"><img class="ico-img" src="../../assets/menu/dat.png" alt="" draggable="false"><b>DAT</b></button>
+      <button class="mode-card mini" disabled title="Coming soon"><img class="ico-img" src="../../assets/menu/microcassette.png" alt="" draggable="false"><b>Microcassette</b></button>
+      <button class="mode-card mini" disabled title="Coming soon"><img class="ico-img" src="../../assets/menu/reel.png" alt="" draggable="false"><b>Reel to Reel</b></button>
+      <button class="mode-card mini" disabled title="Coming soon"><img class="ico-img" src="../../assets/menu/minidisc.png" alt="" draggable="false"><b>MiniDisc</b></button>
+    </div>
+  </div>
+
+  <div id="app" hidden>
+    <header class="top">
+      <div class="brand">Digi-Deck</div>
+      <div class="seg" id="modeSeg">
+        <button data-mode="vinyl">Vinyl</button><button data-mode="cd">CD</button><button data-mode="cassette">Cassette</button>
+      </div>
+      <div class="grp">
+        <button id="openFiles">Open files</button>
+        <button id="openFolder">Open folder</button>
+        <button id="openPlaylist">Open playlist</button>
+        <button id="btnClear" title="Unload the current playlist">Clear</button>
+      </div>
+      <div class="spacer"></div>
+      <div class="grp">
+        <button id="btnLibrary">Library</button>
+        <button id="btnInfo">Edit info</button>
+        <button id="btnArt">Art</button>
+        <button id="btnSettings" title="Settings">⚙</button>
+      </div>
+    </header>
+    <main class="main">
+      <aside id="playlist" class="playlist"></aside>
+      <section id="stage" class="stage-host">
+        <div id="empty" class="empty">Drop music, a folder or a playlist here<br><small>or use the Open buttons above</small></div>
+      </section>
+    </main>
+    <footer class="transport">
+      <button id="tPrev" title="Previous">⏮</button>
+      <button id="tPlay" class="big" title="Play / Pause (Space)">▶</button>
+      <button id="tNext" title="Next">⏭</button>
+      <span id="tCur" class="time">0:00</span>
+      <input id="tSeek" type="range" min="0" max="1000" value="0">
+      <span id="tDur" class="time">0:00</span>
+      <span class="vol">🔈</span><input id="tVol" type="range" min="0" max="100" value="80">
+      <span id="status" class="status"></span>
+    </footer>
+  </div>
+
+  <div id="shelf" class="overlay shelf" hidden></div>
+  <div id="modal" class="overlay modal" hidden></div>
+  <div id="toast"></div>
+
+  <script src="util.js"></script>
+  <script src="generic.js"></script>
+  <script src="labelart.js"></script>
+  <script src="vinyl.js"></script>
+  <script src="cd.js"></script>
+  <script src="cassette-layers.js"></script>
+  <script src="cassette.js"></script>
+  <script src="shelf.js"></script>
+  <script src="editor.js"></script>
+  <script src="libscan.js"></script>
+  <script src="fx.js"></script>
+  <script src="meter.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
