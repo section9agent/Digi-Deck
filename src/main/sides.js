@@ -11,8 +11,11 @@ function albumKey(scan) {
 
 const LETTERS = 'ABCDEFGH';
 // Playing-time limits. Vinyl: 25 min a side (a release can override it); cassette: 90 min a tape = 45 a side; CD: 80 min a disc.
-const CAPS = { vinyl: 25 * 60, cassette: 45 * 60, cd: 80 * 60 };
-const capFor = (mode, sideMinutes) => (mode === 'vinyl' && sideMinutes > 0 ? sideMinutes * 60 : CAPS[mode] || CAPS.vinyl);
+// microcassette: MC-60 = 60 minutes a tape = 30 a side
+// reel to reel (7" reel, 7.5 ips): generic reel 1800 ft = 48 min a side; retail reel 1200 ft = 32 min a side (side_minutes holds the chosen one)
+const CAPS = { vinyl: 25 * 60, cassette: 45 * 60, micro: 30 * 60, reel: 48 * 60, cd: 80 * 60 };
+const isTape = m => m === 'cassette' || m === 'micro' || m === 'reel';
+const capFor = (mode, sideMinutes) => ((mode === 'vinyl' || mode === 'reel') && sideMinutes > 0 ? sideMinutes * 60 : CAPS[mode] || CAPS.vinyl);
 const totalOf = tracks => tracks.reduce((a, t) => a + (t.duration || 0), 0);
 
 // Split into n contiguous sides with the most even playing time.
@@ -44,7 +47,7 @@ function fillSplit(tracks, cap) {
   return out;
 }
 function capacitySplit(mode, tracks, cap, min = 0) {
-  if (mode === 'cassette' && totalOf(tracks) > cap && !(min > 2)) return fillSplit(tracks, cap);
+  if (isTape(mode) && totalOf(tracks) > cap && !(min > 2)) return fillSplit(tracks, cap);
   const step = mode === 'cd' ? 1 : 2, floor = mode === 'cd' ? 1 : 2;
   let n = Math.max(floor, min | 0, Math.ceil(totalOf(tracks) / cap));
   if (step === 2 && n % 2) n++;

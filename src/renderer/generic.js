@@ -50,6 +50,21 @@
     return c;
   }
 
+  // reel to reel box spine (7.5" tall, a bit under 1" deep): title and artist read down the spine
+  function spine(album, w = 154, h = 1500) {
+    const c = S.newCanvas(w, h), x = c.getContext('2d'), hh = hue((album.title || '') + (album.artist || ''));
+    const g = x.createLinearGradient(0, 0, w, 0); g.addColorStop(0, `hsl(${hh},35%,22%)`); g.addColorStop(0.5, `hsl(${hh},38%,28%)`); g.addColorStop(1, `hsl(${hh},35%,19%)`);
+    x.fillStyle = g; x.fillRect(0, 0, w, h);
+    x.fillStyle = '#f4ecdc'; x.fillRect(0, 0, w, h * 0.012); x.fillRect(0, h * 0.988, w, h * 0.012);
+    x.save(); x.translate(w / 2, h / 2); x.rotate(Math.PI / 2); x.textAlign = 'center'; x.textBaseline = 'middle';
+    const t = String(album.title || album.name || 'Untitled'), a = String(album.artist || '');
+    const fit = (text, max, size, wt) => { let sz = size; x.font = `${wt} ${sz}px Georgia, serif`; while (x.measureText(text).width > max && sz > 14) { sz -= 2; x.font = `${wt} ${sz}px Georgia, serif`; } return sz; };
+    x.fillStyle = '#f4ecdc'; fit(t, h * 0.78, w * 0.36, 700); x.fillText(t, 0, a ? -w * 0.14 : 0);
+    if (a) { x.fillStyle = `hsl(${hh},50%,80%)`; fit(a, h * 0.78, w * 0.24, 400); x.fillText(a, 0, w * 0.2); }
+    x.restore();
+    return c;
+  }
+
   // circular label for vinyl & CD, rectangle for cassette
   function label(mode, info, size = 600) {
     const side = info.side || 'A', h = hue(info.title + info.artist);
@@ -98,7 +113,7 @@
   }
   const back_ = (album, h) => back(album, h);
 
-  S.generic = { cover, back, label, jcard };
+  S.generic = { cover, back, label, jcard, spine };
 
   // Resolve the image for a slot, falling back to generated art.
   // slot: front|back|jcard|label_a|label_b ; returns a CanvasImageSource
@@ -109,8 +124,10 @@
       const info = { title: album.title || album.name || 'Untitled', artist: album.artist || '', side };
       if (slot === 'front') return (await S.loadImage(album.front)) || cover(info.title, info.artist);
       if (slot === 'back') return (await S.loadImage(album.back)) || back(album);
+      if (slot === 'spine') return (await S.loadImage(album.spine)) || spine(album);
       if (slot === 'jcard') {
         const j = await S.loadImage(album.jcard);
+        if (!j && mode === 'micro') return S.microJcard(album);
         return j || jcard(album, await S.loadImage(album.front), await S.loadImage(album.back));
       }
       // labels: side B falls back to side A's label when only one was found

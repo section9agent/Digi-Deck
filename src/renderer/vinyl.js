@@ -59,50 +59,87 @@
     x.save(); disc(1); x.clip();
     if (pic) S.drawCover(x, o.pic, 0, 0, size, size);
     else if (clear) { x.fillStyle = 'rgba(176,196,212,.20)'; x.fillRect(0, 0, size, size); }
-    else { x.fillStyle = color.hex; x.fillRect(0, 0, size, size); }
+    else {
+      x.fillStyle = color.hex; x.fillRect(0, 0, size, size);
+      if (color.metal && x.createConicGradient) {          // metallic sheen: bright and dark wedges sweeping round the record
+        const cg = x.createConicGradient(0.5, size / 2, size / 2), hi = 'rgba(255,255,255,.34)', lo = 'rgba(0,0,0,.28)';
+        [0, .125, .25, .375, .5, .625, .75, .875, 1].forEach((p, i) => cg.addColorStop(p, i % 2 ? lo : hi));
+        x.fillStyle = cg; x.fillRect(0, 0, size, size);
+      }
+    }
     x.restore();
     disc(0.985); x.strokeStyle = light ? 'rgba(0,0,0,.14)' : 'rgba(255,255,255,.07)'; x.lineWidth = px * 0.8; x.stroke();
 
     const tracks = o.tracks, bands = computeBands(tracks, g, o.capacity);
     const landColor = pic ? 'rgba(255,255,255,.35)' : clear ? 'rgba(255,255,255,.4)' : light ? S.shade(color.hex, -0.25) : S.shade(color.hex === '#0d0d0d' ? '#1d1d1d' : color.hex, 0.07);
-    const step = Math.max(1.1, px * 0.55);
-    // lead-in: a few widely spaced grooves between the rim and the first song, where the needle is dropped
-    { let ri = 0.985 * R, pitch = step * 2.4, n = 0;
-      while (ri > g.musicOut * R + 1) {
-        x.strokeStyle = n % 2 ? `rgba(255,255,255,${0.08 * lightMul})` : `rgba(0,0,0,${0.2 * darkMul})`;
-        x.lineWidth = 0.8; x.beginPath(); x.arc(R, R, ri, 0, Math.PI * 2); x.stroke();
-        ri -= pitch; pitch = Math.max(step, pitch * 0.82); n++;
-      } }
+    const step = Math.max(1.1, px * 0.55), TAU = Math.PI * 2;
+    const seed = (tracks[0] ? (tracks[0].title || '').length * 131 + (tracks[0].i || 0) * 17 : 7) + tracks.length * 911;
+    const ring = (r, style, w) => { x.strokeStyle = style; x.lineWidth = w; x.beginPath(); x.arc(R, R, r, 0, TAU); x.stroke(); };
+    // a true spiral (the lead-in, the run between songs and the lead-out are wide enough to see the groove spiral)
+    const spiral = (r0, r1, turns, style, w, a0 = 0) => {
+      const n = Math.max(60, Math.ceil(turns * 240)); x.strokeStyle = style; x.lineWidth = w; x.beginPath();
+      for (let i = 0; i <= n; i++) { const t = i / n, r = r0 + (r1 - r0) * t, a = a0 + t * turns * TAU; i ? x.lineTo(R + r * Math.cos(a), R + r * Math.sin(a)) : x.moveTo(R + r * Math.cos(a), R + r * Math.sin(a)); }
+      x.stroke();
+    };
+    const grooveLine = (r0, r1, turns, a0, k = 1) => {      // one groove seen at an angle: a dark wall and a thin bright edge beside it
+      spiral(r0, r1, turns, `rgba(0,0,0,${0.32 * k * darkMul})`, Math.max(1, px * 0.4), a0);
+      spiral(r0 - px * 0.35, r1 - px * 0.35, turns, `rgba(255,255,255,${0.11 * k * lightMul})`, Math.max(0.6, px * 0.22), a0);
+    };
+    // the raised bead round the edge: smooth and glossy, rounded over
+    { const rim = 0.972 * R, gr = x.createRadialGradient(R, R, rim, R, R, R);
+      gr.addColorStop(0, `rgba(0,0,0,${0.18 * darkMul})`); gr.addColorStop(0.35, `rgba(255,255,255,${0.10 * lightMul})`); gr.addColorStop(0.7, `rgba(0,0,0,${0.06 * darkMul})`); gr.addColorStop(1, `rgba(0,0,0,${0.25 * darkMul})`);
+      x.fillStyle = gr; x.beginPath(); x.arc(R, R, R, 0, TAU); x.arc(R, R, rim, 0, TAU, true); x.fill(); }
+    // lead-in: a smooth landing band inside the bead, then the groove starts and spirals in quickly (about 2 turns) to the first song
+    const leadTop = 0.962 * R, music0 = (bands.length ? bands[0].outer : g.musicOut) * R;
+    ring((0.967) * R, landColor, px * 0.9);
+    grooveLine(leadTop, music0 + px * 0.6, 2.1, seed % 6);
+    // music: fine grooves; their spacing and sheen follow the loudness (loud passages are cut wider and catch more light), so each
+    // song shows the faint light and dark rings real records have; the songs are separated by a glossy band the groove crosses in one turn
     bands.forEach((b, k) => {
-      for (let rr = b.outer * R, n = 0; rr > b.inner * R; rr -= step, n++) {
-        const a = 0.05 + noise(n + k * 977) * 0.1;
-        x.strokeStyle = n % 3 === 0 ? `rgba(255,255,255,${a * lightMul})` : `rgba(0,0,0,${a * darkMul})`;
-        x.lineWidth = 0.7; x.beginPath(); x.arc(R, R, rr, 0, Math.PI * 2); x.stroke();
+      const o0 = b.outer * R, i0 = b.inner * R, span = Math.max(1, o0 - i0), ks = seed + k * 977;
+      const env = t => { const fade = Math.min(1, t * 12, (1 - t) * 18); let v = 0; for (let h = 1; h <= 3; h++) v += Math.sin(t * (2 + h * 2.3) + noise(ks + h) * 6.28) / h; return S.clamp(0.58 + 0.16 * v - 0.3 * (1 - fade), 0, 1); };
+      // one ring per pixel: the tone follows the loudness, with fine random grain (no regular spacing, so no moire rings)
+      for (let rr = o0, n = 0; rr > i0; rr -= 1, n++) {
+        const t = (o0 - rr) / span, e = env(t), j = noise(n * 1.7 + ks);
+        ring(rr, `rgba(0,0,0,${(0.08 + 0.07 * (1 - e) + j * 0.04) * darkMul})`, 1);
+        if (j > 0.45) ring(rr, `rgba(255,255,255,${(0.015 + 0.06 * e) * (j - 0.3) * 1.6 * lightMul})`, 0.6);
       }
-      if (k < bands.length - 1) { // the smooth, glossy land between songs
-        const gm = (b.inner - g.gap / 2) * R;
-        x.strokeStyle = landColor; x.lineWidth = g.gap * R * 0.75; x.beginPath(); x.arc(R, R, gm, 0, Math.PI * 2); x.stroke();
-        x.strokeStyle = 'rgba(255,255,255,.06)'; x.lineWidth = 0.7; x.beginPath(); x.arc(R, R, gm, 0, Math.PI * 2); x.stroke();
+      if (k < bands.length - 1) {          // the band between songs: smooth, glossy, with the groove running across it
+        const gOut = b.inner * R, gIn = bands[k + 1].outer * R, gm = (gOut + gIn) / 2;
+        ring(gm, landColor, Math.max(1, (gOut - gIn) * 0.95));
+        ring(gm, `rgba(255,255,255,${0.08 * lightMul})`, Math.max(0.7, (gOut - gIn) * 0.25));
+        grooveLine(gOut, gIn, 1, (seed + k) % 6, 0.55);
       }
     });
-    // lead-out: after the last song the groove spirals inward faster (wider pitch), ends in a smooth band and a locked groove
-    // The side ends with ~1/4" of dead wax when it is full (musicIn sits 1/4" outside the label). The needle's last song ends at lastIn;
-    // from there the groove spirals inward ever faster to the locked groove, just outside the label.
+    // lead-out: after the last song the groove spirals inward with ever wider turns across the run-out area to the locked groove
     const lastIn = bands.length ? bands[bands.length - 1].inner : g.musicOut;
     const leadEnd = g.label + 0.022;
-    { const distPx = Math.max(2, Math.min(lastIn - leadEnd, 0.05) * R), p0 = step * 1.4, nL = Math.max(3, Math.round(Math.sqrt(distPx / step) * 1.8));
-      const sum = q => Math.abs(q - 1) < 1e-6 ? p0 * nL : p0 * (Math.pow(q, nL) - 1) / (q - 1);
-      let lo = 0.3, hi = 3; for (let k = 0; k < 50; k++) { const m = (lo + hi) / 2; if (sum(m) < distPx) lo = m; else hi = m; }
-      const q = (lo + hi) / 2; let rr = lastIn * R, pitch = p0;
-      for (let n = 1; n <= nL; n++) {
-        rr -= pitch; pitch *= q;
-        x.strokeStyle = n % 2 ? `rgba(255,255,255,${0.07 * lightMul})` : `rgba(0,0,0,${0.22 * darkMul})`;
-        x.lineWidth = 0.8; x.beginPath(); x.arc(R, R, Math.max(rr, leadEnd * R), 0, Math.PI * 2); x.stroke();
-      } }
-    x.strokeStyle = landColor; x.lineWidth = px * 0.9; x.beginPath(); x.arc(R, R, leadEnd * R - px * 0.8, 0, Math.PI * 2); x.stroke(); // locked groove
-    x.strokeStyle = pic ? 'rgba(0,0,0,.2)' : light ? 'rgba(0,0,0,.14)' : 'rgba(0,0,0,.4)'; x.lineWidth = px * 0.5;
-    for (let r2 = leadEnd - 0.012; r2 > g.label + 0.004; r2 -= 0.009) { disc(r2); x.stroke(); }   // dead wax / run-out area
-
+    { const r0 = lastIn * R, r1 = leadEnd * R, dist = Math.max(2, r0 - r1);
+      // glossy run-out surface first, then the spiral drawn on it
+      const mid = (r0 + r1) / 2; ring(mid, landColor, dist * 0.92); ring(mid, 'rgba(255,255,255,.035)', dist * 0.5);
+      const turns = o.seven ? 2.2 : 3.2, n = Math.ceil(turns * 300), a0 = (seed * 0.37) % TAU;
+      const pathR = t => r0 - dist * (1 - Math.pow(1 - t, 0.55));              // starts wide and gets wider as it goes in
+      for (const [off, style, w] of [[0, `rgba(0,0,0,${0.34 * darkMul})`, Math.max(1, px * 0.45)], [-px * 0.35, `rgba(255,255,255,${0.12 * lightMul})`, Math.max(0.6, px * 0.22)]]) {
+        x.strokeStyle = style; x.lineWidth = w; x.beginPath();
+        for (let i = 0; i <= n; i++) { const t = i / n, r = pathR(t) + off, a = a0 + t * turns * TAU; i ? x.lineTo(R + r * Math.cos(a), R + r * Math.sin(a)) : x.moveTo(R + r * Math.cos(a), R + r * Math.sin(a)); }
+        x.stroke();
+      }
+    }
+    // the locked groove: one closed circle the needle stays in
+    ring(leadEnd * R - px * 0.2, `rgba(0,0,0,${0.45 * darkMul})`, Math.max(1, px * 0.5));
+    ring(leadEnd * R - px * 0.6, `rgba(255,255,255,${0.14 * lightMul})`, Math.max(0.6, px * 0.25));
+    // dead wax: smooth, with the hand-etched matrix number and a raised ring guarding the label
+    { const rIn = g.label * R, rOut = (leadEnd - 0.006) * R;
+      ring((rIn + rOut) / 2, landColor, Math.max(1, (rOut - rIn) * 0.9));
+      const side = (tracks[0] && tracks[0].side) || 'A', mtx = `DD-${String(1000 + seed % 9000)}-${side}1  ℗`;
+      x.save(); x.translate(R, R); x.rotate((seed * 0.53) % TAU);
+      x.font = `italic ${Math.max(6, px * 1.15)}px "Segoe Print", "Comic Sans MS", cursive`; x.fillStyle = light ? 'rgba(0,0,0,.28)' : 'rgba(255,255,255,.16)';
+      const rt = (rIn + rOut) / 2 - px * 0.4; let ang = 0;
+      for (const ch of mtx) { const w = x.measureText(ch).width; x.save(); x.rotate(ang); x.translate(0, -rt); x.fillText(ch, 0, 0); x.restore(); ang += (w + px * 0.1) / rt; }
+      x.restore();
+      ring(rIn + px * 1.1, `rgba(255,255,255,${0.10 * lightMul})`, px * 0.35);
+      ring(rIn + px * 0.6, `rgba(0,0,0,${0.3 * darkMul})`, px * 0.45);
+    }
     if (!pic) { // paper label
       x.save(); disc(g.label); x.clip();
       x.fillStyle = '#e8e0cf'; x.fillRect(0, 0, size, size);
@@ -112,7 +149,7 @@
     }
     x.save(); x.globalCompositeOperation = 'destination-out'; disc(g.hole); x.fill(); x.restore();
     if (o.seven) drawAdapter(x, R, R, g.hole * R);
-    return { canvas: c, bands, lockR: leadEnd - 0.003, lastIn, leadR: (g.musicOut + 0.985) / 2 };
+    return { canvas: c, bands, lockR: leadEnd - 0.003, lastIn, leadR: (g.musicOut + 0.962) / 2 };
   }
 
   function drawPlatter(size) {
@@ -364,9 +401,13 @@
       this.faces[face] = { side, bands, lockR, leadR, lastIn };
     }
     visIndex() { return Math.round(this.rot / 180) % 2; }
+    // for the library animations: where the record sits on screen, the face that is showing, and a way to hide the real one meanwhile
+    recordCanvas() { return this.faceEls[this.visIndex()].querySelector('canvas'); }
+    recordRect() { const c = this.recordCanvas(); return c ? c.getBoundingClientRect() : null; }
+    hideRecord(h) { this.flipper.style.visibility = h ? 'hidden' : ''; if (h) this.faceEls.forEach(f => { f.style.visibility = 'hidden'; }); else this.settle(); }
 
     async setAlbum(album) {
-      this.album = album; S.normalizeSides(album, 'vinyl');
+      this.album = album; S.normalizeSides(album, 'vinyl'); this.flipper.style.visibility = '';
       this.info = S.releaseInfo(album, 'vinyl'); this.seven = this.info.seven; this.rpm = this.info.rpm;
       this.tt.classList.toggle('seven', this.seven);
       const sides = S.sidesOf(album.tracks);
@@ -401,14 +442,14 @@
     async flipTo(side) {
       if (this.busy) return;
       if (this.currentSide() === side) return;
-      this.busy = true; this.unsettle();
+      this.busy = true; this.unsettle(); this.spindle.style.zIndex = 1;        // the lifted record passes over the spindle
       const hidden = this.visIndex() ^ 1, swap = S.discOf(side) !== S.discOf(this.currentSide());
       if (this.faces[hidden]?.side !== side) await this.renderFace(hidden, side);
       await new Promise(r => setTimeout(r, 650));          // arm lifts away first
       if (swap) {
         await this.swapRecord(hidden, side);
         this.settle(); this.sideLed.textContent = `SIDE ${side}`; this.updateFlipBtn();
-        await new Promise(r => setTimeout(r, 300)); this.busy = false; return;
+        await new Promise(r => setTimeout(r, 300)); this.spindle.style.zIndex = ''; this.busy = false; return;
       }
       const from = this.rot, to = from + 180;
       const anim = this.flipper.animate([
@@ -419,6 +460,7 @@
       await anim.finished.catch(() => {});
       this.rot = to % 360; this.flipper.style.transform = `rotateY(${this.rot}deg)`; this.settle();
       this.sideLed.textContent = `SIDE ${side}`; this.updateFlipBtn();
+      this.spindle.style.zIndex = '';
       await new Promise(r => setTimeout(r, 350));
       this.busy = false;
     }
@@ -468,5 +510,14 @@
 
   S.stages = S.stages || {};
   S.stages.vinyl = VinylStage;
+  // one side of a record as a picture (used by the library animations)
+  S.vinylFace = async (album, side) => {
+    const seven = S.releaseInfo(album, 'vinyl').seven, sk = side.toLowerCase();
+    const tracks = album.tracks.map((t, i) => ({ ...t, i })).filter(t => t.side === side), total = tracks.reduce((a, t) => a + (t.duration || 0), 0);
+    const pic = album.picture_disc ? await S.loadImage(album['pic_' + sk] || album.pic_a) : null;
+    await S.adapterReady;
+    const labelImg = pic ? null : await S.art.get({ ...album }, 'label_' + sk, 'vinyl', side);
+    return drawRecord(seven ? 700 : 1000, { seven, tracks, labelImg, color: S.colorOf(S.VINYL_COLORS, album.color), pic, capacity: Math.max(total, seven ? S.SEVEN_CAPACITY : S.sideLimit(album, 'vinyl')) }).canvas;
+  };
   S.vinyl = { armAngle, GEO, ARM, computeBands, REC };
 })(window.S);

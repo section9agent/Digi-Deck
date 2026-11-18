@@ -79,13 +79,17 @@ window.S = window.S || {};
     { id: 'black', name: 'Black', hex: '#0d0d0d' }, { id: 'red', name: 'Red', hex: '#b3151b' }, { id: 'orange', name: 'Orange', hex: '#e0731d' },
     { id: 'yellow', name: 'Yellow', hex: '#e7c61f' }, { id: 'green', name: 'Green', hex: '#1f8a48' }, { id: 'aqua', name: 'Aqua', hex: '#1e9ea8' },
     { id: 'blue', name: 'Blue', hex: '#1d3f9c' }, { id: 'purple', name: 'Purple', hex: '#6a2c91' }, { id: 'pink', name: 'Pink', hex: '#e0629b' },
-    { id: 'white', name: 'White', hex: '#ececec' }, { id: 'grey', name: 'Grey', hex: '#7b7f85' }, { id: 'clear', name: 'Clear', hex: null }
+    { id: 'white', name: 'White', hex: '#ececec' }, { id: 'grey', name: 'Grey', hex: '#7b7f85' }, { id: 'clear', name: 'Clear', hex: null },
+    { id: 'gold', name: 'Gold', hex: '#c9a227', metal: true }, { id: 'silver', name: 'Silver', hex: '#b9bdc6', metal: true },
+    { id: 'bronze', name: 'Bronze', hex: '#a9742e', metal: true }, { id: 'copper', name: 'Copper', hex: '#b5562f', metal: true }
   ];
   S.TAPE_COLORS = [
-    { id: 'black', name: 'Black', hex: '#3a3a3e' }, { id: 'white', name: 'White', hex: '#e8e4da' }, { id: 'red', name: 'Red', hex: '#b32222' },
+    { id: 'black', name: 'Black', hex: '#0e0e10' }, { id: 'white', name: 'White', hex: '#e8e4da' }, { id: 'red', name: 'Red', hex: '#b32222' },
     { id: 'orange', name: 'Orange', hex: '#d96a1c' }, { id: 'yellow', name: 'Yellow', hex: '#d9b81c' }, { id: 'green', name: 'Green', hex: '#2a7a45' },
     { id: 'blue', name: 'Blue', hex: '#2250a8' }, { id: 'purple', name: 'Purple', hex: '#6b3c96' }, { id: 'pink', name: 'Pink', hex: '#d9669a' },
-    { id: 'gray', name: 'Gray', hex: '#6b6f76' }, { id: 'clear', name: 'Transparent', hex: null }, { id: 'smoke', name: 'Smoke', hex: null }
+    { id: 'gray', name: 'Gray', hex: '#6b6f76' }, { id: 'tan', name: 'Tan', hex: '#c9a577' }, { id: 'clear', name: 'Transparent', hex: null }, { id: 'smoke', name: 'Smoke', hex: null },
+    { id: 'gold', name: 'Gold', hex: '#d4aa2c', metal: true }, { id: 'silver', name: 'Silver', hex: '#c4c8d0', metal: true },
+    { id: 'bronze', name: 'Bronze', hex: '#b27a32', metal: true }, { id: 'copper', name: 'Copper', hex: '#c05c34', metal: true }
   ];
   // value is a preset id or a custom '#rrggbb'
   S.colorOf = (list, value) => {
@@ -122,7 +126,9 @@ window.S = window.S || {};
     const i = S.releaseInfo(a, mode), nm = { single: 'Single', maxi: 'Maxi single', album: '' }[i.type];
     if (mode === 'vinyl') return i.seven ? '7" · 45 rpm' : i.type === 'maxi' ? '12" maxi single · 45 rpm' : '12" LP · 33⅓ rpm';
     if (mode === 'cd') return `${i.small ? '3"' : '5"'} disc${nm ? ' · CD ' + nm.toLowerCase() : ''}`;
-    return nm ? `Cassette ${nm.toLowerCase()}` : 'Cassette';
+    if (mode === 'reel') return `7" reel to reel · ${S.reelType(a) === 'retail' ? 'retail reel, 1,200 ft' : 'generic reel, 1,800 ft'} · 7½ ips`;
+    const tape = mode === 'micro' ? 'Microcassette' : 'Cassette';
+    return nm ? `${tape} ${nm.toLowerCase()}` : tape;
   };
   // 7" singles with two songs: one song per side. CD has one side.
   S.normalizeSides = (a, mode) => {
@@ -149,7 +155,10 @@ window.S = window.S || {};
     const n = mode === 'cd' ? Math.min(8, Math.max(1, a.sides | 0, used + 1)) : Math.min(8, Math.max(2, a.sides | 0, Math.ceil((used + 1) / 2) * 2));
     return S.SIDE_LETTERS.slice(0, n);
   };
-  S.MAX_SEC = { cd: 80 * 60, cassette: 45 * 60 };                                        // vinyl: 25 min a side unless the album says otherwise
-  S.sideLimit = (a, mode) => (mode === 'vinyl' ? ((a && a.side_minutes) || 25) * 60 : S.MAX_SEC[mode] || 0);
+  S.isTape = m => m === 'cassette' || m === 'micro' || m === 'reel';                                         // the two-sided tape formats (flip + swap tape)
+  S.MAX_SEC = { cd: 80 * 60, cassette: 45 * 60, micro: 30 * 60, reel: 48 * 60 };      // microcassette: MC-60 = 30 min a side                                        // vinyl: 25 min a side unless the album says otherwise
+  S.sideLimit = (a, mode) => (mode === 'vinyl' ? ((a && a.side_minutes) || 25) * 60 : mode === 'reel' ? ((a && a.side_minutes) || 48) * 60 : S.MAX_SEC[mode] || 0);
+  // reel to reel: which reel the album is on - the user's choice, else a retail reel for albums with information and the generic 7" reel for the rest
+  S.reelType = a => (a && a.reel_type) || (a && !a.is_generic ? 'retail' : 'generic');
   S.sidesOf = tracks => [...new Set(tracks.map(t => t.side || 'A'))].sort();
 })(window.S);

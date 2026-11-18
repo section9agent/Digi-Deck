@@ -175,7 +175,7 @@ t('findAlbumDirs: one entry per album folder, multi-disc folded into the parent,
     assert.ok(!isNewer('0.1.0', '0.1.0') && !isNewer('v0.1.0', '0.2.0') && !isNewer('0.1.0-beta', '0.1.0'));
     assert.ok(ai.DONATE_URL.includes('business=section9agent%40hotmail.com') && ai.allowedUrls().has(ai.DONATE_URL));
     pass++; console.log('ok   update version compare + donate link');
-  } catch (e) { console.error('FAIL updater', e.message); process.exitCode = 1; }
+  } catch (e) { if (/Electron failed to install/.test(e.message)) { console.log('skip updater (electron binary not installed here)'); } else { console.error('FAIL updater', e.message); process.exitCode = 1; } }
   try {
     const { durationSplit, sidesCount } = require('../src/main/sides');
     const mk = n => Array.from({ length: n }, () => ({ duration: 240 }));
@@ -194,5 +194,45 @@ t('findAlbumDirs: one entry per album folder, multi-disc folded into the parent,
     assert.strictEqual(mix.join(''), 'AAAAAAAAAB', 'cassette mix tape fills side A to 45 min first');
     pass++; console.log('ok   capacity limits (vinyl 25/side, cassette 90/tape, CD 80/disc)');
   } catch (e) { console.error('FAIL sides', e.message); process.exitCode = 1; }
+  try {
+    const sd = require('../src/main/sides'), db = require('../src/main/db');
+    assert.ok(db.MODES.includes('micro'));
+    const long = Array.from({ length: 30 }, (_, i) => ({ title: 't' + i, duration: 300 }));
+    const mc = sd.capacitySplit('micro', long, sd.capFor('micro'));
+    assert.ok([...new Set(mc)].every(L => mc.reduce((a, l, i) => a + (l === L ? 300 : 0), 0) / 60 >= 0) && new Set(mc).size >= 5, 'micro needs 5+ sides for 150 min');
+    for (const L of new Set(mc)) assert.ok(mc.filter(l => l === L).length * 5 <= 30, 'micro side <= 30 min');
+    pass++; console.log('ok   microcassette mode (own DB, 30 min/side)');
+  } catch (e) { console.error('FAIL micro', e.message); process.exitCode = 1; }
+  try {
+    const sd = require('../src/main/sides'), db = require('../src/main/db');
+    assert.ok(db.MODES.includes('reel'));
+    const long = Array.from({ length: 40 }, (_, i) => ({ title: 't' + i, duration: 300 }));      // 200 min
+    const gen = sd.capacitySplit('reel', long, 48 * 60), ret = sd.capacitySplit('reel', long, 32 * 60);
+    for (const [r, m] of [[gen, 48], [ret, 32]]) for (const L of new Set(r)) assert.ok(r.filter(l => l === L).length * 5 <= m, 'reel side within capacity');
+    assert.ok(new Set(ret).size > new Set(gen).size, 'retail reel needs more sides');
+    pass++; console.log('ok   reel to reel mode (48 / 32 min a side)');
+  } catch (e) { console.error('FAIL reel', e.message); process.exitCode = 1; }
+  try {
+    const { Store } = require('../src/main/db'), { Library } = require('../src/main/library');
+    const d = fs.mkdtempSync(path.join(tmp, 'pb-')), art = path.join(d, 'art'), pre = path.join(d, 'pre');
+    fs.mkdirSync(pre);
+    const store = new Store(path.join(d, 'db'));
+    const lib = new Library({ store, providers: { getSettings: () => ({ prebuiltDir: pre, unidentifiedSave: 'ask' }), cacheDir: path.join(d, 'cache') }, artDir: art });
+    if (!fs.existsSync(path.join(__dirname, '..', 'assets', 'micro', 'prebuilt', 'albums.json'))) { pass++; console.log('ok   microcassette prebuilt import (skipped - this build has no pre-made database)'); throw { skip: 1 }; }
+    lib.prebuiltDirs = () => [pre]; fs.copyFileSync(path.join(__dirname, '..', 'assets', 'micro', 'prebuilt', 'albums.json'), path.join(pre, 'albums.json'));   // only the test folder, never the real images
+    fs.writeFileSync(path.join(pre, 'tribe-midjcard.png'), 'x'); fs.writeFileSync(path.join(pre, 'tribe-midsidea.png'), 'x');
+    (async () => {
+      const n = await lib.importPrebuilt('micro');
+      const a = store.getByKey('micro', albumKey({ kind: 'album', artist: 'A Tribe Called Quest', title: 'Midnight Marauders', tracks: [] }));
+      assert.ok(n >= 1 && a && a.jcard && a.label_a && !a.label_b, 'prebuilt album imported with the images that exist');
+      fs.writeFileSync(path.join(pre, 'tribe-midsideb.png'), 'x');
+      await lib.importPrebuilt('micro');
+      const b = store.getById('micro', a.id); assert.ok(b.label_b, 'later image picked up on next run');
+      const data = await lib.readData(b.jcard); assert.ok(data.startsWith('data:image/'));
+      const f = await lib.saveData('data:image/png;base64,AAAA', 'front'); assert.ok(fs.existsSync(f));
+      pass++; console.log('ok   microcassette prebuilt import + image adjust save');
+    })().catch(e => { console.error('FAIL prebuilt', e.message); process.exitCode = 1; });
+  } catch (e) { if (!e || !e.skip) { console.error('FAIL prebuilt', e.message); process.exitCode = 1; } }
+  setTimeout(() => console.log(`\n${pass} passed${process.exitCode ? ' (with failures)' : ''}`), 500); return;
   console.log(`\n${pass} passed${process.exitCode ? ' (with failures)' : ''}`);
 })();

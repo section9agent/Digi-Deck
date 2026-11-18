@@ -65,8 +65,38 @@
     },
 
     // unload the current playlist/album (the library is untouched)
-    clearPlaylist() {
+    // An unidentified playlist (not in the library yet): ask whether to keep it before it is replaced.
+    async confirmKeep() {
+      const a = A.album;
+      if (!a || !a.pending || a.id) return true;
+      const st = await window.api.getSettings();
+      const policy = st.unidentifiedSave || 'ask';
+      if (policy === 'never') return true;
+      const doSave = async () => { const saved = await window.api.librarySave(A.mode, a); S.dropImageCache && S.dropImageCache(); return saved; };
+      if (policy === 'always') { await doSave(); return true; }
+      return new Promise(res => {
+        const rem = S.el('input', { type: 'checkbox' });
+        let settled = false;
+        const done = async (act, ok) => {
+          settled = true; dlg.close();
+          if (rem.checked && act !== 'cancel') window.api.setSettings({ unidentifiedSave: act === 'save' ? 'always' : 'never' });
+          if (act === 'save') { try { await doSave(); S.toast('Saved to the library'); } catch (e) { S.toast('Could not save: ' + e.message); } }
+          res(ok);
+        };
+        const dlg = S.modal('Save to library?', [
+          S.el('p', {}, `"${a.title || a.artist || 'This playlist'}" has no album information. Save it to the ${A.mode === 'micro' ? 'microcassette' : A.mode === 'reel' ? 'reel to reel' : A.mode} library before it is closed?`),
+          S.el('label', { class: 'note' }, rem, ' Remember my choice (change it later in Settings)')],
+          [S.el('button', { onclick: () => done('cancel', false) }, 'Cancel'), S.el('button', { onclick: () => done('discard', true) }, "Don't save"), S.el('button', { class: 'primary', onclick: () => done('save', true) }, 'Save to library')],
+          { narrow: true, onClose: () => { if (!settled) res(false); } });
+      });
+    },
+
+    async clearPlaylist() {
       if (!A.album) { S.toast('Nothing to clear'); return; }
+      if (!(await A.confirmKeep())) return;
+      // an album from the library that has been stopped is put back in its packaging first
+      const T = S.transit, back = T && T.enabled() && T[A.mode + 'Back'];
+      if (back && A.album.id && A.audio.paused && !A.clearing) { A.clearing = true; try { await back(A.album); } catch (e) { console.error(e); } A.clearing = false; }
       A.audio.pause(); A.audio.removeAttribute('src'); try { A.audio.load(); } catch {}
       A.token++; A.album = null; A.scan = null; A.cur = -1; A.stopped = true; A.finished = false; A.pendingSeek = 0; A.cumAll = []; A.cumSide = []; A.sideTotals = {};
       A.mountStage(); A.renderPlaylist();
@@ -96,7 +126,7 @@
       A.mountStage();
       if (!A.album) return;
       const scan = A.scan || A.scanFromAlbum(A.album);
-      await A.openScan(scan, { startIndex: Math.max(0, snap.cur), startTime: snap.time, autoplay: snap.playing });
+      await A.openScan(scan, { keep: true, startIndex: Math.max(0, snap.cur), startTime: snap.time, autoplay: snap.playing });
     },
 
     scanFromAlbum(a) {
@@ -117,6 +147,7 @@
     },
 
     async openScan(scan, opts = {}) {
+      if (!opts.keep && A.album && A.album.pending && !(await A.confirmKeep())) return;
       A.scan = scan;
       try {
         const album = await window.api.resolve(A.mode, scan, !!opts.force);
@@ -125,13 +156,28 @@
       $('#status').textContent = '';
     },
 
-    async openLibraryAlbum(id) {
+    // Play in the library: the album comes out of its packaging first (when there is an animation for this player)
+    async playFromLibrary(id, from, closeShelf) {
+      const T = S.transit, fn = T && T.enabled() && T[A.mode + 'Out'];
+      if (!fn || !from || !from.width) { closeShelf(); return A.openLibraryAlbum(id); }
+      if (!(await A.confirmKeep())) return;
+      const album = await window.api.libraryLoad(A.mode, id);
+      if (!album) { closeShelf(); return S.toast('That entry no longer exists'); }
+      S.normalizeSides(album, A.mode);
+      A.audio.pause();
+      try { await fn(album, from, async () => { closeShelf(); await A.openLibraryAlbum(id, { autoplay: false, confirmed: true }); }); }
+      catch (e) { console.error(e); if (!A.album || A.album.id !== id) { closeShelf(); await A.openLibraryAlbum(id, { autoplay: false, confirmed: true }); } }
+      if (A.album && A.album.id === id) await A.playIndex(0);
+    },
+
+    async openLibraryAlbum(id, opts = {}) {
+      if (!opts.confirmed && !(await A.confirmKeep())) return;
       const album = await window.api.libraryLoad(A.mode, id);
       if (!album) return S.toast('That entry no longer exists');
       A.scan = A.scanFromAlbum(album);
       const missing = album.tracks.filter(t => t.missing).length;
       if (missing) S.toast(`${missing} file(s) can't be found on disk - re-open the folder/playlist to relink them`);
-      await A.loadAlbum(album, { autoplay: true });
+      await A.loadAlbum(album, { autoplay: opts.autoplay !== false });
     },
 
     computeCum() {
@@ -173,11 +219,13 @@
       if (i < 0 || i >= a.tracks.length) return A.endOfAlbum();
       const t = a.tracks[i], token = ++A.token;
       if (t.missing || !t.path) { S.toast(`Skipping missing file: ${t.title}`); return A.playIndex(i + 1); }
+      if (A.stage.ensureLoaded && A.stage.ejected) await A.stage.ensureLoaded();           // microcassette: tape slides back in first
+      if (token !== A.token) return;
       const wasStopped = A.stopped || A.finished;
       A.vphase = null; S.fx.leadOut(false);
       A.cur = i; A.stopped = false; A.finished = false; A.highlight();
       if (A.stage.currentSide() !== t.side) {
-        A.audio.pause(); A.flipping = true; if (A.mode === 'cassette') S.fx.hiss('off');
+        A.audio.pause(); A.flipping = true; if (S.isTape(A.mode) && S.fx.tape) S.fx.hiss('off');
         await A.stage.flipTo(t.side);
         A.flipping = false;
         if (token !== A.token) return;
@@ -191,7 +239,7 @@
           if (token !== A.token) return;
           A.vphase = null;
         } else if (wasStopped || A.audio.paused) S.fx.needleTap();
-      } else if (S.fx.tape && A.mode === 'cassette' && S.meter.ensure()) {
+      } else if (S.fx.tape && S.isTape(A.mode) && S.meter.ensure()) {
         S.meter.resume();
         if (sideStart) {          // ~5 s of leader hiss with the reels turning, then it drops under the music
           A.vphase = 'leader'; S.fx.hiss('up');
@@ -249,12 +297,15 @@
     togglePlay() {
       if (!A.album) return A.openDialog('files');
       if (A.stopped || A.finished || !A.audio.src) return A.playIndex(A.cur >= 0 && !A.finished ? A.cur : 0);
+      if (A.stage && A.stage.ejected) { A.stage.loadTape().then(() => A.audio.play()); return; }
       if (A.audio.paused) A.audio.play(); else A.audio.pause();
     },
+    // microcassette EJECT: stop, door opens, tape slides out; pressed again it slides back in
+    eject() { if (!A.stage || !A.stage.eject) return; if (A.stage.ejected) A.stage.loadTape(); else { A.stop(); A.stage.eject(); } },
     stop() { A.token++; A.vphase = null; S.fx.stopAll(); A.audio.pause(); try { A.audio.currentTime = 0; } catch {} A.stopped = true; },
     next(fromEnd) {
       if (!A.album) return;
-      if (fromEnd && ((A.mode === 'vinyl' && S.fx.vinyl) || (A.mode === 'cassette' && S.fx.tape))) {
+      if (fromEnd && ((A.mode === 'vinyl' && S.fx.vinyl) || (S.isTape(A.mode) && S.fx.tape))) {
         const tr = A.album.tracks, last = A.cur + 1 >= tr.length;
         if (last || tr[A.cur + 1].side !== tr[A.cur].side) return A.mode === 'vinyl' ? A.runOut(last) : A.tapeEnd(last);
       }
@@ -266,7 +317,7 @@
       const sides = S.sidesOf(A.album.tracks); if (sides.length < 2) return;
       const cur = A.stage.currentSide(), pair = S.partnerSide(cur);
       // cassette: FLIP turns the tape over (A<->B); changing tapes has its own button. Vinyl keeps cycling through the set.
-      const next = A.mode === 'cassette' ? (sides.includes(pair) ? pair : cur) : sides[(sides.indexOf(cur) + 1) % sides.length];
+      const next = S.isTape(A.mode) ? (sides.includes(pair) ? pair : cur) : sides[(sides.indexOf(cur) + 1) % sides.length];
       if (next === cur) return;
       const first = A.album.tracks.findIndex(t => t.side === next);
       A.playIndex(first);
@@ -290,9 +341,9 @@
     tick(ts) {
       const dt = Math.min(0.1, (ts - (A.last || ts)) / 1000); A.last = ts;
       const st = A.computeState();
-      if (A.stage && A.album) A.stage.frame(dt, st);
+      if (A.stage && (A.album || A.stage.alwaysRun)) A.stage.frame(dt, st);
       S.fx.surface(A.mode === 'vinyl' && st.playing && !A.vphase);
-      if (A.mode === 'cassette') { if (!st.playing && !A.vphase) S.fx.hiss('off'); else if (st.playing && !A.vphase && !S.fx._hiss) S.fx.hiss('low'); }
+      if (S.isTape(A.mode) && S.fx.tape) { if (!st.playing && !A.vphase) S.fx.hiss('off'); else if (st.playing && !A.vphase && !S.fx._hiss) S.fx.hiss('low'); }
       if (!A.seeking) {
         const d = A.trackDuration();
         $('#tCur').textContent = S.fmt(st.trackTime); $('#tDur').textContent = S.fmt(d);
@@ -306,7 +357,8 @@
     updateSwapBtn() {
       const n = A.album && A.mode !== 'vinyl' ? S.sideCount(A.album, A.mode) : 0;
       const units = A.album ? new Set(S.sidesOf(A.album.tracks).map(x => S.discOf(x, A.mode))).size : 0;
-      A.swapBtn.hidden = !(A.mode !== 'vinyl' && units > 1);
+      A.swapBtn.hidden = !(A.mode !== 'vinyl' && A.mode !== 'cd' && units > 1);     // the CD player has its own EJECT key
+      if (A.stage && A.stage.setMulti) A.stage.setMulti(units > 1);
       A.swapBtn.textContent = A.mode === 'cd' ? '⏏ CHANGE DISC' : '⏏ CHANGE TAPE';
       A.swapBtn.title = A.mode === 'cd' ? 'Swap in the next disc' : 'Swap in the next tape';
     },

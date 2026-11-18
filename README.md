@@ -1,6 +1,8 @@
+> **Version 1.9.3 - build without the pre-made microcassette database.** The installer has no database page and the app never imports one.
+
 # Digi-Deck
 
-A desktop media player (Electron) that plays your music on a vinyl turntable, a CD player or a cassette deck.
+A desktop media player (Electron) that plays your music on a vinyl turntable, a CD player, a cassette deck or a microcassette recorder.
 
 ## Run
 Needs Node.js 22.5 or newer (any current LTS is fine). No C++ build tools are needed - the database uses SQLite built into Node/Electron.
@@ -21,7 +23,7 @@ Pushing a `v*` tag (or running the workflow manually) builds the Windows exe (Ma
 4. **Edit info** lets you change artist/title/tracks/sides, replace any art slot (front, back, J-card, label A, label B), search for another release, or paste a Discogs / MusicBrainz release URL to force the exact release.
 
 ## Databases
-`vinyl.db`, `cd.db` and `cassette.db` live in the app's user-data folder (`db/`). They are fully independent. Downloaded images are cached once on disk and referenced by each database.
+`vinyl.db`, `cd.db`, `cassette.db` and `micro.db` live in the app's user-data folder (`db/`). They are fully independent. Downloaded images are cached once on disk and referenced by each database.
 
 ## Art / metadata sources
 MusicBrainz + Cover Art Archive, Discogs, TheAudioDB, fanart.tv, iTunes, Deezer; also `cover.jpg`/`folder.jpg`/`back.jpg`/`label.jpg`... next to the music, and art embedded in tags.
@@ -45,8 +47,10 @@ Artwork is looked up per format: the vinyl library prefers the artwork of the ma
 - Cassette VU meters follow the audio actually playing (Web Audio analyser, dB scale, peak hold). Local files are served through a `ddmedia://` protocol with CORS so the analyser works; falls back to file:// with simulated meters if that fails.
 
 ## About window, donations and auto-update
-- **Help > About Digi-Deck** shows the credits ("Coded by Claude & Emmanuel Hoachlander"), the open-source software and online services used, the full licence texts (`THIRD_PARTY_NOTICES.md`, regenerate with `npm run notices`) and a PayPal donation button.
+- **Help > About Digi-Deck** shows the credits ("Coded by Claude & Emmanuel Hoachlander", "Name & Logo by Tylor Hornbeck"), the open-source software and online services used, the full licence texts (`THIRD_PARTY_NOTICES.md`, regenerate with `npm run notices`) and a PayPal donation button.
 - **Auto-update** checks GitHub Releases a few seconds after start-up and installs new versions (Windows installer build). Turn it off in **Settings**, **Help > Automatically Check for Updates**, or the About window. **Help > Check for Updates…** always works.
 - **One-time setup:** in `package.json` replace `YOUR-GITHUB-USERNAME` (in `repository.url` and `build.publish[0].owner`) with your GitHub user or organisation name, and keep the repo name `digi-deck` (or change it in both places). Until then the update check just says no update source is set up.
 - **Releasing:** bump `version` in `package.json`, push a `v*` tag, let the workflow build, then **publish** the draft release. The updater only sees published releases and needs the `Digi-Deck-Setup-x.y.z.exe`, `.blockmap` and `latest.yml` files the workflow uploads.
 - The portable `.exe` can't replace itself; it tells you a new version exists and opens the download page.
+
+- **Microcassette**: right-to-left tape at 15/16 in/s, door-and-slide loading, lo-fi ALC/EQ chain with ChowTapeModel-derived saturation (GPLv3, see THIRD_PARTY_NOTICES.md).

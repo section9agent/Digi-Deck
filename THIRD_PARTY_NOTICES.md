@@ -1235,3 +1235,7 @@ Copyright Dana Rice. Distributed freely by the author. Used for handwritten tape
 
 ## Segoe Print
 Microsoft proprietary Windows font. NOT bundled; used from the system when present, otherwise Desyrel is used.
+
+
+## ChowTapeModel (src/renderer/tapemodel-worklet.js)
+The microcassette tape saturation is a JavaScript/AudioWorklet port of the Jiles-Atherton hysteresis processor from ChowTapeModel (https://github.com/jatinchowdhury18/AnalogTapeModel, v2.11.4) by Jatin Chowdhury. Licensed under the **GNU General Public License v3**. Because this derived code is bundled, Digi-Deck as a whole must be distributed under GPLv3 terms, with source code available to recipients. Wow/flutter and the other ChowTape stages are not used.

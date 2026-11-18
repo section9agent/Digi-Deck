@@ -1,4 +1,4 @@
-// Three completely separate SQLite databases: vinyl.db, cd.db, cassette.db.
+// Completely separate SQLite databases, one per player: vinyl.db, cd.db, cassette.db, micro.db, reel.db (every new player gets its own).
 // Same schema in each, but nothing is shared between them.
 const path = require('path');
 const fs = require('fs');
@@ -22,10 +22,10 @@ class DB {
   }
 }
 
-const MODES = ['vinyl', 'cd', 'cassette'];
+const MODES = ['vinyl', 'cd', 'cassette', 'micro', 'reel'];
 // vinyl: one label (and, for picture discs, one full-disc image) per side, A-H = up to four records
 const SIDE_KEYS = 'abcdefgh'.split('');
-const ART_SLOTS = ['front', 'back', 'jcard', ...SIDE_KEYS.map(k => 'label_' + k), ...SIDE_KEYS.map(k => 'pic_' + k)];
+const ART_SLOTS = ['front', 'back', 'jcard', 'spine', ...SIDE_KEYS.map(k => 'label_' + k), ...SIDE_KEYS.map(k => 'pic_' + k)];
 
 // Columns added after v0.1.0 - added to existing databases on startup.
 //   color        vinyl colour (vinyl.db) or cassette shell colour (cassette.db): preset id or #rrggbb
@@ -35,6 +35,10 @@ const ART_SLOTS = ['front', 'back', 'jcard', ...SIDE_KEYS.map(k => 'label_' + k)
 const EXTRA_COLUMNS = {
   color: "TEXT DEFAULT ''", picture_disc: 'INTEGER DEFAULT 0', pic_a: "TEXT DEFAULT ''", pic_b: "TEXT DEFAULT ''",
   release_type: "TEXT DEFAULT ''", disc_size: "TEXT DEFAULT ''",
+  spine: "TEXT DEFAULT ''",                        // reel to reel: the box spine
+  reel_full: "TEXT DEFAULT ''",                     // reel to reel: '1' when the label picture covers the whole reel face
+  reel_type: "TEXT DEFAULT ''",                    // reel to reel: 'generic' (7" plastic reel, 48 min a side) or 'retail' (1200 ft, 32 min a side)
+  jcard_adj: "TEXT DEFAULT ''",                   // J-card: {z,ox,oy} pan/zoom used for the shelf spine + cover (the stored image itself stays whole)
   side_minutes: 'INTEGER DEFAULT 0',            // vinyl: playing-time limit per side in minutes (0 = default 25)
   sides: 'INTEGER DEFAULT 0',                       // vinyl / cassette: number of sides (2 = one record or tape, 4 = double ...); CD: number of discs; 0 = from the tracks
   ...Object.fromEntries(SIDE_KEYS.slice(2).flatMap(k => [['label_' + k, "TEXT DEFAULT ''"], ['pic_' + k, "TEXT DEFAULT ''"]]))
@@ -93,7 +97,7 @@ class Store {
   }
   list(mode) {
     return this.db(mode).prepare(
-      `SELECT a.id,a.key,a.kind,a.artist,a.title,a.year,a.front,a.back,a.jcard,a.is_generic,a.last_played,a.release_type,a.disc_size,a.sides,
+      `SELECT a.id,a.key,a.kind,a.artist,a.title,a.year,a.front,a.back,a.jcard,a.spine,a.reel_type,a.reel_full,a.jcard_adj,a.is_generic,a.last_played,a.release_type,a.disc_size,a.sides,
               (SELECT COUNT(*) FROM tracks t WHERE t.album_id=a.id) AS track_count,
               (SELECT COALESCE(SUM(t.duration),0) FROM tracks t WHERE t.album_id=a.id) AS total_sec
        FROM albums a ORDER BY lower(a.artist), lower(a.title)`).all();
@@ -101,7 +105,7 @@ class Store {
   save(mode, album) {
     const db = this.db(mode);
     const now = Date.now();
-    const f = ['kind', 'artist', 'title', 'year', 'label', 'catno', 'discogs_id', 'mbid', 'front', 'back', 'jcard', 'source_path', 'color', 'release_type', 'disc_size', ...SIDE_KEYS.map(k => 'label_' + k), ...SIDE_KEYS.map(k => 'pic_' + k)];
+    const f = ['kind', 'artist', 'title', 'year', 'label', 'catno', 'discogs_id', 'mbid', 'front', 'back', 'jcard', 'spine', 'reel_type', 'reel_full', 'jcard_adj', 'source_path', 'color', 'release_type', 'disc_size', ...SIDE_KEYS.map(k => 'label_' + k), ...SIDE_KEYS.map(k => 'pic_' + k)];
     const tx = db.transaction(() => {
       let id = album.id;
       if (id) {

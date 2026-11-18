@@ -1,6 +1,6 @@
 {
   "name": "digi-deck",
-  "version": "0.1.0",
+  "version": "1.9.3",
   "description": "Digi-Deck - a vinyl / CD / cassette media player with per-format libraries",
   "main": "src/main/main.js",
   "author": "Emmanuel Hoachlander",
@@ -12,7 +12,12 @@
     "dist:win": "electron-builder --win --x64",
     "dist:win:portable": "electron-builder --win portable --x64",
     "dist:dir": "electron-builder --dir",
-    "notices": "node scripts/notices.js"
+    "notices": "node scripts/notices.js",
+    "predist": "node scripts/check-prebuilt.js",
+    "predist:win": "node scripts/check-prebuilt.js",
+    "predist:win:portable": "node scripts/check-prebuilt.js",
+    "predist:dir": "node scripts/check-prebuilt.js",
+    "check-prebuilt": "node scripts/check-prebuilt.js"
   },
   "dependencies": {
     "electron-updater": "^6.8.11",
@@ -29,7 +34,8 @@
       "src/**/*",
       "assets/**/*",
       "package.json",
-      "THIRD_PARTY_NOTICES.md"
+      "THIRD_PARTY_NOTICES.md",
+      "!assets/micro/prebuilt/**"
     ],
     "mac": {
       "category": "public.app-category.music",

@@ -22,11 +22,11 @@
         <img class="ico-img cas" src="../../assets/menu/cassette.png" alt="" draggable="false"><b>Cassette</b><span>Full-view tape deck, up to 90 minutes a tape</span>
       </button>
     </div>
-    <h2 class="niche-h">Niche formats <small>coming soon</small></h2>
+    <h2 class="niche-h">Niche formats <small>more coming soon</small></h2>
     <div class="cards niche">
       <button class="mode-card mini" disabled title="Coming soon"><img class="ico-img" src="../../assets/menu/dat.png" alt="" draggable="false"><b>DAT</b></button>
-      <button class="mode-card mini" disabled title="Coming soon"><img class="ico-img" src="../../assets/menu/microcassette.png" alt="" draggable="false"><b>Microcassette</b></button>
-      <button class="mode-card mini" disabled title="Coming soon"><img class="ico-img" src="../../assets/menu/reel.png" alt="" draggable="false"><b>Reel to Reel</b></button>
+      <button class="mode-card mini" data-mode="micro" title="Microcassette deck"><img class="ico-img" src="../../assets/menu/microcassette.png" alt="" draggable="false"><b>Microcassette</b></button>
+      <button class="mode-card mini" data-mode="reel" title="Reel to reel deck"><img class="ico-img" src="../../assets/menu/reel.png" alt="" draggable="false"><b>Reel to Reel</b></button>
       <button class="mode-card mini" disabled title="Coming soon"><img class="ico-img" src="../../assets/menu/minidisc.png" alt="" draggable="false"><b>MiniDisc</b></button>
     </div>
   </div>
@@ -35,7 +35,7 @@
     <header class="top">
       <div class="brand">Digi-Deck</div>
       <div class="seg" id="modeSeg">
-        <button data-mode="vinyl">Vinyl</button><button data-mode="cd">CD</button><button data-mode="cassette">Cassette</button>
+        <button data-mode="vinyl">Vinyl</button><button data-mode="cd">CD</button><button data-mode="cassette">Cassette</button><button data-mode="micro">Micro</button><button data-mode="reel">Reel</button>
       </div>
       <div class="grp">
         <button id="openFiles">Open files</button>
@@ -80,7 +80,12 @@
   <script src="cd.js"></script>
   <script src="cassette-layers.js"></script>
   <script src="cassette.js"></script>
+  <script src="microdeck-art.js"></script>
+  <script src="microcassette.js"></script>
+  <script src="reel.js"></script>
   <script src="shelf.js"></script>
+  <script src="transit.js"></script>
+  <script src="crop.js"></script>
   <script src="editor.js"></script>
   <script src="libscan.js"></script>
   <script src="fx.js"></script>

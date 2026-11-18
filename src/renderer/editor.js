@@ -11,6 +11,7 @@
       return s;
     }
     if (mode === 'cd') return [['front', 'Front'], ['back', 'Back (tray card, with spines)'], ...sides.map((x, i) => ['label_' + x.toLowerCase(), sides.length > 1 ? `CD label ${i + 1}` : 'CD label'])];
+    if (mode === 'reel') return [['front', 'Cover (front of box)'], ['spine', 'Spine'], ['back', 'Back of box'], ...sides.map(x => ['label_' + x.toLowerCase(), 'Label ' + x])];
     return [['front', 'Front'], ['jcard', 'J-card (back flap · spine · cover)'], ...sides.map(x => ['label_' + x.toLowerCase(), 'Label ' + x])];
   };
 
@@ -33,7 +34,7 @@
     const render = () => {
       const cur = S.colorOf(list, get());
       wrap.replaceChildren(...list.map(c => {
-        const bg = c.hex || (c.id === 'smoke' ? 'linear-gradient(135deg,#8a8c96,#2a2a30)' : 'repeating-conic-gradient(#d8dde2 0 25%,#fff 0 50%) 0 0/10px 10px');
+        const bg = c.metal ? `linear-gradient(135deg,${S.shade(c.hex, 0.35)},${c.hex} 45%,${S.shade(c.hex, -0.35)})` : c.hex || (c.id === 'smoke' ? 'linear-gradient(135deg,#8a8c96,#2a2a30)' : 'repeating-conic-gradient(#d8dde2 0 25%,#fff 0 50%) 0 0/10px 10px');
         return el('button', { class: 'sw' + (cur.id === c.id ? ' on' : ''), title: c.name, style: { background: bg }, onclick: () => { set(c.id); render(); } });
       }), el('label', { class: 'sw-custom' + (cur.id === 'custom' ? ' on' : ''), title: 'Custom colour' }, 'Custom', custom),
         el('span', { class: 'note' }, cur.name));
@@ -44,7 +45,7 @@
 
   // ------------------------------------------------------------------ editor
   const editor = S.editor = {
-    open(album) {
+    open(album, opts = {}) {
       const mode = S.app.mode;
       const work = JSON.parse(JSON.stringify(album));
       let candidates = [];
@@ -80,7 +81,7 @@
         // how many records / tapes / discs the release spans, and the playing-time limit that decides the split
         if (info.type === 'album' || mode === 'cd') {
           const per = mode === 'cd' ? 1 : 2, max = mode === 'cd' ? 8 : 4, cur = Math.ceil(S.sideCount(work, mode) / per);
-          const noun = mode === 'cd' ? 'disc' : mode === 'cassette' ? 'tape' : 'record';
+          const noun = mode === 'cd' ? 'disc' : mode === 'reel' ? 'reel' : S.isTape(mode) ? 'tape' : 'record';
           const first = S.SIDE_LETTERS;
           const sel = el('select', { onchange: e => { work.sides = +e.target.value * per; renderTracks(); renderFormat(); renderSlots(); } },
             Array.from({ length: max }, (_, i) => i + 1).map(n => el('option', { value: n }, mode === 'cd' ? (n === 1 ? '1 disc' : `${n} discs`) : n === 1 ? `1 ${noun} (sides A, B)` : `${n} ${noun}s (sides A–${first[n * 2 - 1]})`)));
@@ -89,11 +90,17 @@
           const maxUsed = Math.ceil(used / per);
           [...sel.options].forEach(o => { o.disabled = +o.value < maxUsed; });
           const lim = S.sideLimit(work, mode);
-          rows.push(el('label', {}, mode === 'cd' ? 'Discs in this release' : mode === 'cassette' ? 'Tapes in this release' : 'Records in this release', sel));
+          rows.push(el('label', {}, mode === 'cd' ? 'Discs in this release' : mode === 'reel' ? 'Reels in this release' : S.isTape(mode) ? 'Tapes in this release' : 'Records in this release', sel));
           if (mode === 'vinyl') {
             const mins = el('input', { type: 'number', min: 5, max: 60, step: 1, value: work.side_minutes || 25, style: { width: '80px' }, onchange: e => { work.side_minutes = Math.max(5, Math.min(60, +e.target.value || 25)); if (work.side_minutes === 25) work.side_minutes = 0; renderFormat(); renderTracks(); } });
             rows.push(el('label', {}, 'Minutes per side (limit)', mins), el('div', { class: 'note' }, `A side normally holds up to 25 minutes; change it here to override. Long playlists are split into as many sides as the limit needs (now ${lim / 60} min). Every side gets its own label image below; put each track on its side in the Tracks list. While playing, Digi-Deck flips the record, then swaps in the next one.`));
-          } else if (mode === 'cassette') rows.push(el('div', { class: 'note' }, 'A tape holds 90 minutes (45 a side). Longer playlists are split across several tapes; every side gets its own label image below. While playing, Digi-Deck flips the tape, then swaps in the next one.'));
+          } else if (mode === 'reel') {
+            const rt = el('select', { onchange: e => { work.reel_type = e.target.value; work.side_minutes = work.reel_type === 'retail' ? 32 : 48; renderFormat(); renderTracks(); renderSlots(); } },
+              el('option', { value: 'generic' }, 'Generic 7" reel - 1,800 ft, 48 min a side'), el('option', { value: 'retail' }, 'Retail reel - 1,200 ft, 32 min a side'));
+            rt.value = S.reelType(work);
+            rows.push(el('label', {}, 'Reel', rt), el('div', { class: 'note' }, 'Tape runs at 7½ ips. A generic 7" reel holds 1,800 ft (about 48 minutes a side); a retail reel holds 1,200 ft (about 32). Longer playlists are split across several reels; every side gets its own label image below. The box shows the cover on the front, the spine image on the spine and the back image on the back.'));
+          } else if (mode === 'micro') rows.push(el('div', { class: 'note' }, 'A microcassette (MC-60) holds 60 minutes (30 a side). Longer playlists are split across several tapes; every side gets its own label image below. The J-card image is the whole card: back flap, spine, cover - the shelf spine and the cover are cut from it. While playing, Digi-Deck flips the tape, then swaps in the next one.'));
+          else if (mode === 'cassette') rows.push(el('div', { class: 'note' }, 'A tape holds 90 minutes (45 a side). Longer playlists are split across several tapes; every side gets its own label image below. While playing, Digi-Deck flips the tape, then swaps in the next one.'));
           else rows.push(el('div', { class: 'note' }, 'A CD holds 80 minutes. Longer playlists, and multi-disc albums, use several discs; every disc gets its own label image below. Put each track on its disc in the Tracks list.'));
         }
         if (mode === 'vinyl') {
@@ -102,7 +109,12 @@
           rows.push(el('div', { class: 'sec' }, 'Record colour'), swatches(S.VINYL_COLORS, () => work.color, v => { work.color = v; }),
             el('label', { class: 'chk' }, pd, ' Picture disc (full-disc image with the song grooves drawn on top; choose the images under Artwork)'));
         }
-        if (mode === 'cassette') rows.push(el('div', { class: 'sec' }, 'Tape / shell colour'), swatches(S.TAPE_COLORS, () => work.color, v => { work.color = v; }));
+        if (S.isTape(mode) && mode !== 'reel') rows.push(el('div', { class: 'sec' }, 'Tape / shell colour'), swatches(S.TAPE_COLORS, () => work.color, v => { work.color = v; }));
+        if (mode === 'reel') {
+          const full = el('input', { type: 'checkbox', onchange: e => { work.reel_full = e.target.checked ? '1' : ''; renderSlots(); } }); full.checked = !!work.reel_full;
+          rows.push(el('div', { class: 'sec' }, 'Reel colour'), swatches(S.TAPE_COLORS, () => work.color, v => { work.color = v; }),
+            el('label', { class: 'chk' }, full, ' Full reel label (the label picture is the whole face of the reel, not a sticker - adjust it with the round guide)'));
+        }
         fmt.replaceChildren(...rows);
       };
 
@@ -122,7 +134,8 @@
             work.sides = Math.max(work.sides | 0, S.unitLetters(work, mode).length === 1 ? 0 : S.unitLetters(work, mode).length);
             if (useTitles.checked && tl.length === work.tracks.length) work.tracks.forEach((t, i) => { t.title = tl[i].title || t.title; });
           }
-          for (const [slot] of S.slotsFor(mode, work)) { const p = r.picks[slot]; if (p) work[slot] = p.url; }
+          for (const [slot] of S.slotsFor(mode, work)) { const p = r.picks[slot]; if (p && !work[slot]) work[slot] = p.url; }      // fills empty / generic slots; your own images are kept
+          
           S.normalizeSides(work, mode);
           candidates = r.candidates; refreshAll();
           status.textContent = `Applied ${source} release ${id}.`;
@@ -147,7 +160,21 @@
       const urlIn = el('input', { placeholder: 'Image URL…', style: { flex: 1 } });
       const urlSlot = el('select');
       const candEl = el('div', { class: 'cands' });
-      const setSlot = (slot, val) => { work[slot] = val; renderSlots(); };
+      const setSlot = (slot, val) => { work[slot] = val; if (slot === 'jcard') work.jcard_adj = ''; renderSlots(); };
+      const slotAspect = k => k === 'front' || k.startsWith('pic_') ? '1' : (k.startsWith('label_') ? (mode === 'cassette' ? '2.1563' : mode === 'micro' ? '1.7035' : mode === 'reel' ? (work.reel_full ? '1' : '2.1375') : '1') : (k === 'jcard' && mode === 'micro' ? '1.0151' : k === 'spine' ? '0.103' : 'orig'));
+      const guideFor = k => {                         // outline of what is actually visible on the finished label / disc
+        if (k.startsWith('label_') || k.startsWith('pic_')) {
+          if (mode === 'cassette') return { mask: '../../assets/cassette/label-clean.png' };
+          if (mode === 'micro') return { mask: '../../assets/labels/micro.png' };
+          if (mode === 'reel') return work.reel_full ? { circle: 0.985, hole: 0.058 } : { mask: '../../assets/labels/reel.png' };
+          if (mode === 'cd') { const rad = S.releaseInfo(work, mode).small ? 40 : 60; return { circle: 0.995, hole: 7.5 / rad, hub: 17.5 / rad }; }
+          const seven = S.releaseInfo(work, mode).type === 'single';
+          if (k.startsWith('pic_')) return { circle: 1, hole: seven ? 0.2143 : 0.0238 };
+          return seven ? { circle: 1, hole: 0.2143 / 0.54 } : { circle: 1, hole: 0.0238 / 0.333 };
+        }
+        if (mode === 'cd' && k === 'back') return { tray: 0.0425 };
+        return null;
+      };
       const renderSlots = () => {
         const slots = S.slotsFor(mode, work);
         urlSlot.replaceChildren(...slots.map(([k, n]) => el('option', { value: k }, n)));
@@ -160,6 +187,18 @@
           } else pv.textContent = k.startsWith('pic_') ? 'no picture' : 'generated automatically';
           return el('div', { class: 'slot' }, el('b', {}, name), pv, el('div', { class: 'sb' },
             el('button', { onclick: async () => { const p = await window.api.pickImage(); if (p) setSlot(k, p); } }, 'Choose…'),
+            work[k] ? el('button', { title: k === 'jcard' ? 'Line up the spine and cover used on the shelf (the full J-card image is kept)' : 'Move / zoom / re-crop this image', onclick: async () => {
+              if (k === 'jcard') {
+                const single = S.releaseInfo(work, mode).type === 'single';
+                const r = mode === 'micro' ? { cover: 407 / 596, spine: 104 / 596 } : single ? { cover: 2.5625 / 4, spine: 0.125 } : { cover: 2.75 / 4.25, spine: 0.1326 };
+                const out = await S.cropImage(work.jcard, { title: 'Adjust shelf spine and cover', params: true, initial: work.jcard_adj ? JSON.parse(work.jcard_adj) : null, guide: { jcard: r } });
+                if (out) { work.jcard_adj = (out.z === 1 && !out.ox && !out.oy && !out.rot) ? '' : JSON.stringify(out); S.toast('Shelf spine / cover adjusted - Save to keep it'); }
+                return;
+              }
+              const out = await S.cropImage(work[k], { title: 'Adjust – ' + name, aspect: slotAspect(k), guide: guideFor(k) });
+              if (!out) return;
+              try { setSlot(k, await window.api.artSaveData(out, k)); S.toast('Adjusted image set - Save to keep it'); } catch (e) { S.toast('Could not save the image: ' + e.message); }
+            } }, 'Adjust…') : null,
             work[k] ? el('button', { onclick: () => setSlot(k, '') }, 'Clear') : null));
         }));
         renderCands();
@@ -227,10 +266,11 @@
           S.dropImageCache();
           if (S.app.album && S.app.album.id === saved.id) await S.app.afterEdit(saved);
           dlg.close();
+          if (opts.onSaved) opts.onSaved(saved);
           S.toast('Saved');
         } catch (e) { status.textContent = 'Could not save: ' + e.message; }
       } }, 'Save');
-      const dlg = S.modal(`Edit info – ${mode}`, body, [el('button', { onclick: () => dlg.close() }, 'Cancel'), save]);
+      const dlg = S.modal(`Edit info – ${mode==="micro"?"microcassette":mode==="reel"?"reel to reel":mode}`, body, [el('button', { onclick: () => dlg.close() }, 'Cancel'), save]);
       refreshAll();
     }
   };
@@ -241,15 +281,15 @@
     const path = el('input', { value: s.libraryPath || '', placeholder: 'Folder with your music (artist/album folders)', readonly: true, style: { flex: '1' } });
     const pick = el('button', { onclick: async () => { const p = await window.api.pickFolder(); if (p) path.value = p; } }, 'Browse…');
     const none = el('button', { onclick: () => { path.value = ''; } }, 'Remove');
-    const fmts = ['vinyl', 'cd', 'cassette'], have = new Set(s.libraryFormats || fmts);
+    const fmts = ['vinyl', 'cd', 'cassette', 'micro', 'reel'], have = new Set(s.libraryFormats || fmts);
     const boxes = fmts.map(k => { const cb = el('input', { type: 'checkbox' }); cb.checked = have.has(k); return [k, cb]; });
     const auto = el('input', { type: 'checkbox' }); auto.checked = !!s.libraryAutoScan;
     f._lib = () => ({ libraryPath: path.value, libraryFormats: boxes.filter(([, cb]) => cb.checked).map(([k]) => k), libraryAutoScan: auto.checked });
     return el('div', { class: 'lib-box' },
       el('div', { class: 'lib-title' }, 'Media library folder'),
-      el('div', { class: 'note' }, 'The app scans this folder, finds every album and adds it to the libraries below, downloading the artwork and release info for each format (LP art for vinyl, CD art for CD, cassette art for cassette). Re-scans only look at new or changed folders.'),
+      el('div', { class: 'note' }, 'The app scans this folder, finds every album and adds it to the libraries below, downloading the artwork and release info for each format (LP art for vinyl, CD art for CD, cassette art for cassette and microcassette). Re-scans only look at new or changed folders.'),
       el('div', { style: { display: 'flex', gap: '6px', margin: '6px 0' } }, path, pick, none),
-      el('div', { class: 'lib-fmts' }, el('span', { class: 'note' }, 'Add albums to:'), ...boxes.map(([k, cb]) => el('label', {}, cb, ' ' + (k === 'cd' ? 'CD' : k[0].toUpperCase() + k.slice(1))))),
+      el('div', { class: 'lib-fmts' }, el('span', { class: 'note' }, 'Add albums to:'), ...boxes.map(([k, cb]) => el('label', {}, cb, ' ' + (k === 'cd' ? 'CD' : k === 'micro' ? 'Microcassette' : k === 'reel' ? 'Reel to reel' : k[0].toUpperCase() + k.slice(1))))),
       el('label', { class: 'lib-fmts' }, auto, ' Scan automatically when the app starts'));
   }
   function updSection(s, f) {
@@ -262,9 +302,18 @@
   function generalSection(s, f) {
     const cb = (checked, text) => { const i = el('input', { type: 'checkbox' }); i.checked = checked; return [i, el('label', { class: 'lib-fmts' }, i, ' ' + text)]; };
     const [fs, fsRow] = cb(!!s.fullscreen, 'Always open in full screen');
-    const [sfx, sfxRow] = cb(s.soundFx !== false, 'Sound effects - vinyl needle drop, crackle and lead-out loop; cassette tape hiss and tape saturation');
-    f._gen = () => ({ fullscreen: fs.checked, soundFx: sfx.checked });
-    return el('div', { class: 'lib-box' }, el('div', { class: 'lib-title' }, 'General'), fsRow, sfxRow,
+    const [sfx, sfxRow] = cb(s.soundFx !== false, 'Sound effects - vinyl needle drop, crackle and lead-out loop; cassette and microcassette tape hiss and tape saturation; reel to reel tape warmth');
+    const [pre, preRow] = cb(s.usePrebuilt !== false, 'Use the pre-made microcassette database (artwork for the supplied albums; applied when the microcassette library is opened)');
+    const us = el('select', {}, el('option', { value: 'ask' }, 'Ask me'), el('option', { value: 'always' }, 'Always save'), el('option', { value: 'never' }, 'Never save'));
+    us.value = s.unidentifiedSave || 'ask';
+    const [la, laRow] = cb(s.libraryAnim !== false, 'Library animations - the album comes out of its jacket / case when you press Play, and goes back when you clear the playlist (click to skip one)');
+    f._gen = () => ({ fullscreen: fs.checked, soundFx: sfx.checked, libraryAnim: la.checked, unidentifiedSave: us.value, usePrebuilt: pre.checked });
+    const exp = el('button', { class: 'btn', onclick: async () => {
+      try { const r = await window.api.exportAdjust(); if (r) S.toast(`Exported: ${r.albums} album(s) changed, ${r.images} adjusted image(s), ${r.shelf} shelf adjustment(s) - see the folder's README.txt`); } catch (e) { S.toast('Export failed: ' + (e.message || e)); }
+    } }, 'Export microcassette adjustments...');
+    return el('div', { class: 'lib-box' }, el('div', { class: 'lib-title' }, 'General'), fsRow, sfxRow, laRow, preRow,
+      el('div', { class: 'lib-fmts' }, exp, el('span', { class: 'note' }, ' Saves your adjusted images, shelf spine/cover settings and colours to a folder you can drop into the pre-made database.')),
+      el('label', { class: 'lib-fmts' }, 'Playlists / folders with no album info, when cleared or changed: ', us),
       el('div', { class: 'note' }, 'Sound effects only colour how the music is played back; turn them off for clean audio. Full screen can also be toggled any time with F11.'));
   }
   S.settingsDialog = async () => {

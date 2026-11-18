@@ -39,7 +39,13 @@
       title: { x: 232, y: 775, w: 556, size: 44, align: 'left' }, artist: { x: 281, y: 822, w: 506, size: 42, align: 'left' } } },
     cassette: { img: 'cassette', font: 'SegoePrint', ink: '#1b2540', mark: 'thin', fields: {
       artist: { x: 720, y: 36, w: 1240, size: 58, align: 'center' }, title: { x: 720, y: 108, w: 1240, size: 70, align: 'center', font: 'Desyrel' } },
-      brand: { text: 'digi', font: 'OCRA', x: 716, y: 558, size: 92, ink: '#222', bold: true } }
+      brand: { text: 'digi', font: 'OCRA', x: 716, y: 558, size: 92, ink: '#222', bold: true } },
+    // microcassette: artist top left (next to the shell notch), title top right; positions from the supplied generic label PSD (586 x 344)
+    // reel to reel: half-disc label sticker (855 x 400): artist on the first writing line, album / playlist on the next two
+    reel: { img: 'reel', font: 'SegoePrint', ink: '#1b2540', mark: 'thin', fields: {
+      artist: { x: 428, y: 224, w: 640, size: 40, align: 'center' }, title: { x: 428, y: 272, w: 700, size: 40, align: 'center', font: 'Desyrel' }, side: { x: 428, y: 322, w: 520, size: 36, align: 'center' } } },
+    micro: { img: 'micro', font: 'SegoePrint', ink: '#14213d', mark: 'thin', fields: {
+      artist: { x: 70, y: 40, w: 182, size: 22, align: 'left' }, title: { x: 340, y: 42, w: 218, size: 27, align: 'left', font: 'Desyrel' } } }
   };
 
   const loadBase = (() => { const c = {}; return key => c[key] || (c[key] = new Promise(res => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = A + 'labels/' + key + '.png'; })); })();
@@ -138,6 +144,27 @@
     const i = { title: info.title, artist: info.artist, side: info.side || 'A' };
     if (mode === 'vinyl') { const key = info.seven ? 'vinyl7' : 'vinyl12'; i.sideText = info.seven ? 'SIDE ' + i.side : i.side; return render(key, i); }
     if (mode === 'cd') return render(info.small ? 'cd3' : 'cd5', i);
+    if (mode === 'micro') return render('micro', i);
+    if (mode === 'reel') { i.sideText = 'Side ' + i.side; return render('reel', i); }
     return render('cassette', i);
+  };
+
+  // ---- microcassette J-card (generic, no cover art): back flap | spine | cover, laid out like the supplied generic J-card PSD (605 x 596) ----
+  S.MICRO_JCARD = { W: 605, H: 596, flap: [0, 91], spine: [93, 197], cover: [198, 605] };
+  S.microJcard = async album => {
+    await S.fontsReady;
+    const J = S.MICRO_JCARD, k = 2, cv = S.newCanvas(J.W * k, J.H * k), x = cv.getContext('2d');
+    const base = await new Promise(r => { const im = new Image(); im.onload = () => r(im); im.onerror = () => r(null); im.src = A + 'micro/jcard.png'; });
+    if (base) x.drawImage(base, 0, 0, cv.width, cv.height); else { x.fillStyle = '#b0d0e0'; x.fillRect(0, 0, cv.width, cv.height); }
+    x.scale(k, k);
+    const title = album.title || album.name || 'Untitled', artist = S.displayArtist(album) || '';
+    const fitText = (text, max, size) => { let s = size; x.font = `${s}px ${STACK.OCRA}`; while (x.measureText(text).width > max && s > 11) { s -= 1; x.font = `${s}px ${STACK.OCRA}`; } return text; };
+    // spine: reads top to bottom, album on the left line, artist on the right
+    const spineText = (text, cx, size, ink) => { x.save(); x.translate(cx, 300); x.rotate(Math.PI / 2); x.fillStyle = ink; x.textAlign = 'center'; x.textBaseline = 'middle'; fitText(text, 440, size); x.fillText(text, 0, 0); x.restore(); };
+    spineText(title, 127, 30, '#101010'); if (artist) spineText(artist, 168, 26, '#303030');
+    // cover: artist over album, white with a dark edge so it reads on both blues
+    const coverText = (text, y, size) => { x.save(); x.textAlign = 'center'; x.textBaseline = 'middle'; fitText(text, 330, size); x.lineJoin = 'round'; x.lineWidth = 5; x.strokeStyle = '#0b3f63'; x.strokeText(text, 428, y); x.fillStyle = '#fff'; x.fillText(text, 428, y); x.restore(); };
+    if (artist) coverText(artist, 150, 33); coverText(title, 194, 30);
+    return cv;
   };
 })(window.S);

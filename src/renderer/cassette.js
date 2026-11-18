@@ -51,6 +51,15 @@
     return Math.hypot(c1.x - toward.x, c1.y - toward.y) < Math.hypot(c2.x - toward.x, c2.y - toward.y) ? c1 : c2;
   }
 
+  const HOLE = 52;                                                  // radius of the see-through hole in a hub
+  function spindleEl(c) {                                           // the deck's drive spindle seen through a hub: black, six lugs, a pale ring
+    const R = 50, cv = S.newCanvas(R * 4, R * 4), x = cv.getContext('2d'); x.scale(2, 2); x.translate(R, R);
+    x.fillStyle = '#d9d7d1'; x.beginPath(); x.arc(0, 0, R * 0.94, 0, 7); x.fill();                      // pale collar
+    x.fillStyle = '#0b0b0c'; x.beginPath(); x.arc(0, 0, R * 0.8, 0, 7); x.fill();
+    x.fillStyle = '#242427'; for (let i = 0; i < 6; i++) { x.save(); x.rotate(i * Math.PI / 3); x.fillRect(-4.5, -R * 0.8, 9, R * 0.46); x.restore(); }
+    x.fillStyle = '#141416'; x.beginPath(); x.arc(0, 0, R * 0.36, 0, 7); x.fill(); x.fillStyle = '#4a4b4f'; x.beginPath(); x.arc(-3, -3, 4, 0, 7); x.fill();
+    cv.className = 'cas-spindle'; Object.assign(cv.style, { position: 'absolute', transformOrigin: '50% 50%' }); pctBox(cv, c.x - R, c.y - R, R * 2, R * 2); return cv;
+  }
   const pctBox = (el, x, y, w, h) => Object.assign(el.style, { left: x / CW * 100 + '%', top: y / CH * 100 + '%', width: w / CW * 100 + '%', height: h / CH * 100 + '%' });
 
   // the paper label: the supplied label art with the writing erased, then the album's own title/artist drawn in the same places
@@ -59,7 +68,9 @@
     const cv = S.newCanvas(CW, 742), x = cv.getContext('2d');
     if (real) {
       const img = await S.art.get(album, slot, 'cassette', side);
-      S.drawCover(x, img, 0, 0, cv.width, cv.height);
+      const iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
+      if (iw === 1440 && ih === 624) x.drawImage(img, 80, 96);            // a generic label made for the paper area: place it 1:1, like the built-in label art
+      else S.drawCover(x, img, 0, 0, cv.width, cv.height);
       x.globalCompositeOperation = 'destination-in'; x.drawImage(base, 0, 0); x.globalCompositeOperation = 'source-over';
       return cv;
     }
@@ -108,7 +119,13 @@
       face.prepend(f.packL, f.packR, f.hubL, f.hubR);
     }
     // pale backing behind the windows, so tape (dark) reads against empty space (light) exactly like the supplied art
-    const back = S.el('div', { class: 'cas-winback' }); pctBox(back, 327, 291, 944, 276); face.prepend(back);
+    // (the hub centres are cut out of it, and a black drive spindle sits in each one, so the hubs look hollow)
+    const back = S.newCanvas(944 * 2, 276 * 2); back.className = 'cas-winback'; pctBox(back, 327, 291, 944, 276);
+    { const x = back.getContext('2d'); x.scale(2, 2); const g = x.createLinearGradient(0, 0, 0, 276); g.addColorStop(0, '#fbfaf6'); g.addColorStop(1, '#e9e5da');
+      x.fillStyle = g; x.beginPath(); x.roundRect(0, 0, 944, 276, [132, 132, 132, 132]); x.fill();
+      x.globalCompositeOperation = 'destination-out'; for (const c of [LEFT, RIGHT]) { x.beginPath(); x.arc(c.x - 327, c.y - 291, HOLE, 0, 7); x.fill(); } }
+    f.spL = spindleEl(LEFT); f.spR = spindleEl(RIGHT);
+    face.prepend(f.spL, f.spR); face.prepend(back);
     setPacks(f, 0);
     return f;
   }
@@ -211,10 +228,13 @@
     }
     paintEdges(col) {
       const clear = col.id === 'clear' || col.id === 'smoke';
-      this.stageEl.style.setProperty('--edge', clear ? '#ffffff33' : col.id === 'black' ? '#4c4d4f' : col.id === 'white' ? '#a9aaad' : S.shade(col.hex, -0.28));
+      this.stageEl.style.setProperty('--edge', clear ? '#ffffff33' : col.id === 'black' ? '#242528' : col.id === 'white' ? '#a9aaad' : S.shade(col.hex, -0.28));
       this.edges.forEach(el => el.classList.toggle('clear', clear));
     }
     currentSide() { return this.faces[this.visIndex()]?.side || 'A'; }
+    // for the library animations
+    recordRect() { this.stageEl.getAnimations().forEach(a => a.finish()); return this.stageEl.getBoundingClientRect(); }
+    hideRecord(h) { this.stageEl.style.opacity = h ? 0 : ''; }      // (the slots set their own visibility, so opacity is what hides it)
 
     async swapTape(side) {              // eject the tape and slot in the next one of the set
       const from = this.rot, to = from + 180;
@@ -273,8 +293,8 @@
     frame(dt, st) {
       this.t += dt;
       const target = (st.playing || st.vphase) && !this.busy ? 1 : 0;
-      this.spin += (target - this.spin) * (1 - Math.exp(-dt * (target ? 5 : 2.5)));
-      if (!target && this.spin < 0.002) this.spin = 0;
+      // spins up quickly; STOP halts the reels at once (no wind-down)
+      if (target) this.spin += (1 - this.spin) * (1 - Math.exp(-dt * 5)); else this.spin = 0;
       const frac = S.clamp(st.sideFrac || 0, 0, 1);
       for (const f of this.faces) {
         if (!f) continue;
@@ -282,6 +302,7 @@
         f.angL -= (TAPE_MM_S / (f.rSup / PX_MM)) * 180 / Math.PI * dt * this.spin;
         f.angR -= (TAPE_MM_S / (f.rTake / PX_MM)) * 180 / Math.PI * dt * this.spin;
         f.hubL.style.transform = f.packL.style.transform = `rotate(${f.angL}deg)`; f.hubR.style.transform = f.packR.style.transform = `rotate(${f.angR}deg)`;
+        if (f.spL) { f.spL.style.transform = `rotate(${f.angL}deg)`; f.spR.style.transform = `rotate(${f.angR}deg)`; }
       }
       this.counter = String(Math.floor((st.sideTime || 0) * 0.9)).padStart(4, '0').slice(-4);
       this.timeStr = S.fmt(st.sideTime || 0);
@@ -292,6 +313,13 @@
     }
     destroy() { this._ro.disconnect(); this.deck.remove(); }
   }
+  // one side of a tape as a free-standing element (library animations); fill its parent
+  S.cassetteFace = async (album, side) => {
+    const col = S.colorOf(S.TAPE_COLORS, album.color), info = S.releaseInfo(album, 'cassette');
+    const load = info.type === 'album' ? 1 : S.clamp(album.tracks.filter(t => t.side === side).reduce((a, t) => a + (t.duration || 0), 0) / 1800, 0.1, 0.7);
+    return (await buildFace(album, 'label_' + side.toLowerCase(), side, col, info, load)).el;
+  };
+  S.cassetteEdge = album => { const col = S.colorOf(S.TAPE_COLORS, album.color); return col.id === 'clear' || col.id === 'smoke' ? '#d9dee455' : col.id === 'black' ? '#242528' : col.id === 'white' ? '#a9aaad' : S.shade(col.hex, -0.28); };
   S.stages = S.stages || {};
   S.stages.cassette = CassetteStage;
 })(window.S);

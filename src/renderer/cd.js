@@ -44,19 +44,49 @@
       this.well.append(this.recess, this.hub, this.discWrap, this.sheen, this.spindle);
       const logo = e('img', { class: 'cdp-logo', src: '../../assets/cd-logo.svg', alt: 'Compact Disc Digital Audio', draggable: 'false' });
       logo.onerror = () => { logo.replaceWith(e('div', { class: 'cdp-logo cdp-logo-txt' }, 'COMPACT DISC DIGITAL AUDIO')); };
-      this.win.append(this.well, logo);
+      this.win.append(this.well); this.logo = logo;
 
       this.lcd = e('div', { class: 'cdp-lcd' },
         e('div', { class: 'lcd-l' }, this.lcdLab = e('span', { class: 'lcd-lab' }, 'TRACK'), this.lcdTrack = e('span', { class: 'lcd-big' }, '--'), this.lcdOf = e('span', { class: 'lcd-of' }, '/--')),
         e('div', { class: 'lcd-r' }, e('span', { class: 'lcd-lab' }, 'TIME'), this.lcdTime = e('span', { class: 'lcd-big' }, '0:00'), this.lcdRpm = e('span', { class: 'lcd-of' }, '')));
-      const b = (t, title, fn, cls = '') => e('button', { class: 'cdp-btn ' + cls, title, onclick: fn }, t);
-      this.playBtn = b('▶‖', 'Play / Pause', () => S.app.togglePlay());
-      this.keys = e('div', { class: 'cdp-keys' },
-        b('■', 'Stop', () => S.app.stop()), this.playBtn, b('⏮', 'Previous', () => S.app.prev()), b('⏭', 'Next', () => S.app.next()),
-        b('≡', 'Open library', () => S.shelf.open()));
-      this.rocker = e('div', { class: 'cdp-rocker' }, e('button', { title: 'Volume down', onclick: () => S.app.volume(-0.08) }, '−'), e('button', { title: 'Volume up', onclick: () => S.app.volume(0.08) }, '+'));
-      this.strip = e('div', { class: 'cdp-strip' }, this.lcd, this.keys, this.rocker);
-      this.body.append(this.win, this.strip);
+      const round = (cls, t, title, fn, label) => e('div', { class: 'cdp-rkey ' + cls }, e('button', { class: 'cdp-round', title, onclick: fn }, t), label ? e('span', { class: 'cdp-print' }, label) : null);
+      this.stopKey = round('stop', '■', 'Stop', () => S.app.stop(), 'STOP');
+      this.ejectKey = round('eject', '⏏', 'Eject - put in the next disc', () => S.app.manualSwap(), 'EJECT · NEXT DISC');
+      this.ejectKey.hidden = true;
+      // the half-moon key cluster: four curved keys around a domed play/pause key
+      const NS = 'http://www.w3.org/2000/svg', sv = (tag, at = {}) => { const n = document.createElementNS(NS, tag); for (const k in at) n.setAttribute(k, at[k]); return n; };
+      const svg = sv('svg', { class: 'cdp-moon', viewBox: '-4 -4 208 112' });
+      const defs = sv('defs');
+      defs.innerHTML = '<linearGradient id="cdpSeg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9a9fa6"/><stop offset=".5" stop-color="#6f747b"/><stop offset="1" stop-color="#555a60"/></linearGradient>'
+        + '<radialGradient id="cdpDome" cx=".42" cy=".25" r=".9"><stop offset="0" stop-color="#e9ecef"/><stop offset=".45" stop-color="#a9aeb4"/><stop offset="1" stop-color="#5d6268"/></radialGradient>'
+        + '<linearGradient id="cdpRim" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a3d42"/><stop offset="1" stop-color="#15171a"/></linearGradient>';
+      svg.append(defs, sv('path', { d: 'M -2 102 A 102 102 0 0 1 202 102 Z', fill: 'url(#cdpRim)' }));
+      const P = (r, a) => [100 + r * Math.cos(a), 102 - r * Math.sin(a)].map(v => v.toFixed(2)).join(' ');
+      const segs = [['⏮', 'Previous', () => S.app.prev(), 'PREV'], ['−', 'Volume down', () => S.app.volume(-0.08), 'VOL'], ['+', 'Volume up', () => S.app.volume(0.08), 'VOL'], ['⏭', 'Next', () => S.app.next(), 'NEXT']];
+      const R1 = 98, R0 = 54, gap = 0.03;
+      segs.forEach(([t, title, fn, lab], i) => {
+        const a1 = Math.PI - i * Math.PI / 4 - gap, a0 = Math.PI - (i + 1) * Math.PI / 4 + gap, am = (a0 + a1) / 2;
+        const g = sv('g', { class: 'cdp-seg' }); const tt = sv('title'); tt.textContent = title; g.append(tt);
+        g.append(sv('path', { d: `M ${P(R1, a1)} A ${R1} ${R1} 0 0 1 ${P(R1, a0)} L ${P(R0, a0)} A ${R0} ${R0} 0 0 0 ${P(R0, a1)} Z`, fill: 'url(#cdpSeg)', stroke: '#2a2d31', 'stroke-width': 1.2 }));
+        const [tx, ty] = P((R0 + R1) / 2 + 4, am).split(' ').map(Number);
+        const tx1 = sv('text', { x: tx, y: ty + 5, 'text-anchor': 'middle', class: 'cdp-seg-ico' }); tx1.textContent = t;
+        let [lx, ly] = P(R0 + 9, am).split(' ').map(Number);
+        if (i === 0 || i === 3) { tx1.setAttribute('y', ty + 1); lx = tx; ly = ty + 9; }      // PREV / NEXT: name under the icon
+        const tx2 = sv('text', { x: lx, y: ly + 2.5, 'text-anchor': 'middle', class: 'cdp-seg-lab' }); tx2.textContent = lab;
+        g.append(tx1, tx2); g.addEventListener('click', fn); svg.append(g);
+      });
+      const dome = sv('g', { class: 'cdp-seg dome' }); const dt = sv('title'); dt.textContent = 'Play / Pause'; dome.append(dt);
+      dome.append(sv('path', { d: `M ${100 - 48} 102 A 48 48 0 0 1 ${100 + 48} 102 Z`, fill: 'url(#cdpDome)', stroke: '#2a2d31', 'stroke-width': 1.2 }));
+      const pt = sv('text', { x: 100, y: 88, 'text-anchor': 'middle', class: 'cdp-dome-ico' }); pt.textContent = '▶‖'; dome.append(pt);
+      dome.addEventListener('click', () => S.app.togglePlay()); svg.append(dome);
+      this.moon = e('div', { class: 'cdp-moonbox' }); this.moon.append(svg);
+      this.brand = e('div', { class: 'cdp-brand' }, 'DIGI-DECK');
+      this.model = e('div', { class: 'cdp-model' }, 'PORTABLE COMPACT DISC PLAYER');
+      this.arcTxt = e('div', { class: 'cdp-arctxt' }, 'DIGITAL AUDIO · CONSTANT LINEAR VELOCITY');
+      this.silver = e('div', { class: 'cdp-silver' }, this.stopKey, this.ejectKey, this.lcd, this.moon);
+      this.surround = e('div', { class: 'cdp-surround' });
+      this.glare = e('div', { class: 'cdp-glare' });
+      this.body.append(this.silver, this.surround, this.win, this.brand, this.model, this.logo, this.glare);
       this.root.append(this.body);
       this.host.append(this.root);
       this.discWrap.style.cursor = 'pointer'; this.discWrap.addEventListener('click', () => S.app.togglePlay());
@@ -64,18 +94,21 @@
     layout() {
       const W = this.host.clientWidth, H = this.host.clientHeight;
       if (!W || !H) return;
-      const U = Math.max(300, Math.min(W - 30, (H - 30) / 0.95));
+      const AR = 1.0, U = Math.max(300, Math.min(W - 30, (H - 30) / AR));
       this.U = U;
-      Object.assign(this.root.style, { width: U + 'px', height: U * 0.95 + 'px', left: (W - U) / 2 + 'px', top: (H - U * 0.95) / 2 + 'px' });
+      Object.assign(this.root.style, { width: U + 'px', height: U * AR + 'px', left: (W - U) / 2 + 'px', top: (H - U * AR) / 2 + 'px' });
       this.root.style.setProperty('--u', U + 'px');
-      const wh = U * 0.69, ww = U * 0.92;
-      Object.assign(this.win.style, { left: U * 0.04 + 'px', top: U * 0.04 + 'px', width: ww + 'px', height: wh + 'px' });
-      Object.assign(this.well.style, { width: wh + 'px', height: wh + 'px', left: (ww - wh) / 2 + 'px', top: 0 });
-      const full = wh * 0.92, dd = full * (this.small ? 80 / 120 : 1);
+      // the disc sits in a round smoked well in the black top; the well dips into the silver control strip
+      const wh = U * 0.68, cx = U / 2, cy = U * 0.44;
+      Object.assign(this.win.style, { left: cx - wh / 2 + 'px', top: cy - wh / 2 + 'px', width: wh + 'px', height: wh + 'px' });
+      const sr = wh * 1.07; Object.assign(this.surround.style, { left: cx - sr / 2 + 'px', top: cy - sr / 2 + 'px', width: sr + 'px', height: sr + 'px' });
+      Object.assign(this.well.style, { width: wh + 'px', height: wh + 'px', left: 0, top: 0 });
+      const full = wh * 0.95, dd = full * (this.small ? 80 / 120 : 1);
       const ctr = (el, d) => Object.assign(el.style, { width: d + 'px', height: d + 'px', left: (wh - d) / 2 + 'px', top: (wh - d) / 2 + 'px' });
-      ctr(this.recess, wh * 0.97); ctr(this.discWrap, dd); ctr(this.sheen, dd); ctr(this.hub, full * 0.19); ctr(this.spindle, full * 0.045);
+      ctr(this.recess, wh); ctr(this.discWrap, dd); ctr(this.sheen, dd); ctr(this.hub, full * 0.19); ctr(this.spindle, full * 0.045);
       this.discFull = full;
     }
+    setMulti(m) { this.ejectKey.hidden = !m; }
     async drawDisc(side) {
       const label = await S.art.get(this.album, 'label_' + side.toLowerCase(), 'cd', side);
       const canvas = drawCD(900, { small: this.small, labelImg: label });
@@ -83,7 +116,7 @@
       this.discWrap.firstChild.replaceChildren(canvas);
     }
     async setAlbum(album) {
-      this.album = album; S.normalizeSides(album, 'cd');
+      this.album = album; S.normalizeSides(album, 'cd'); this.hideRecord(false);
       this.small = S.releaseInfo(album, 'cd').small;
       this.root.classList.toggle('small', this.small);
       this.discs = S.sidesOf(album.tracks); this.disc = this.discs[0] || 'A';
@@ -103,6 +136,10 @@
       await new Promise(r => setTimeout(r, 250)); this.busy = false;
     }
     currentSide() { return this.disc; }
+    // for the library animations
+    recordCanvas() { return this.discWrap.querySelector('canvas'); }
+    recordRect() { return this.discWrap.getBoundingClientRect(); }
+    hideRecord(h) { this.discWrap.style.visibility = h ? 'hidden' : ''; }
 
     frame(dt, st) {
       const target = st.playing && !this.busy ? 1 : 0;
@@ -126,5 +163,9 @@
   }
   S.stages = S.stages || {};
   S.stages.cd = CDStage;
+  S.cdFace = async (album, side) => {
+    const small = S.releaseInfo(album, 'cd').small, label = await S.art.get(album, 'label_' + side.toLowerCase(), 'cd', side);
+    return drawCD(900, { small, labelImg: label });
+  };
   S.cdRpm = f => RPM_START / Math.sqrt(1 + K * f);
 })(window.S);

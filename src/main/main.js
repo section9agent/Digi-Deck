@@ -14,7 +14,7 @@ const { LibraryScanner } = require('./libscan');
 const { AUDIO_EXT, PLAYLIST_EXT, isAudio, isPlaylist } = require('./playlists');
 
 let win, store, providers, library, settings, scanner, updater, aboutWin;
-const defaults = { discogsToken: '', fanartKey: '', audiodbKey: '123', contact: '', lastMode: '', libraryPath: '', libraryFormats: ['vinyl', 'cd', 'cassette'], libraryAutoScan: false, autoUpdate: true, fullscreen: false, soundFx: true };
+const defaults = { discogsToken: '', fanartKey: '', audiodbKey: '123', contact: '', lastMode: '', libraryPath: '', libraryFormats: ['vinyl', 'cd', 'cassette', 'micro', 'reel'], libraryAutoScan: false, autoUpdate: true, fullscreen: false, soundFx: true };
 
 function settingsFile() { return path.join(app.getPath('userData'), 'settings.json'); }
 function loadSettings() {
@@ -117,7 +117,7 @@ const wrap = fn => async (_e, arg) => {
 
 function startLibraryScan(force) {
   const roots = [settings.libraryPath].filter(Boolean);
-  const formats = (settings.libraryFormats || []).filter(f => ['vinyl', 'cd', 'cassette'].includes(f));
+  const formats = (settings.libraryFormats || []).filter(f => ['vinyl', 'cd', 'cassette', 'micro', 'reel'].includes(f));
   if (!roots.length) return Promise.reject(new Error('Choose a media library folder in Settings first.'));
   if (!formats.length) return Promise.reject(new Error('Pick at least one format to fill in Settings.'));
   return scanner.run({ roots, formats, force });
@@ -127,6 +127,7 @@ function registerIpc() {
   ipcMain.handle('libscan:start', wrap(({ force } = {}) => { startLibraryScan(!!force).catch(e => win && win.webContents.send('libscan', { phase: 'error', message: e.message })); return true; }));
   ipcMain.handle('libscan:cancel', wrap(() => { scanner.cancel(); return true; }));
   ipcMain.handle('libscan:running', wrap(() => scanner.running));
+  ipcMain.handle('lib:exportAdjust', wrap(async () => { const r = await dialog.showOpenDialog(win, { title: 'Choose a folder for the adjustment export', properties: ['openDirectory', 'createDirectory'] }); if (r.canceled) return null; return library.exportAdjustments(r.filePaths[0], 'micro'); }));
   ipcMain.handle('dialog:folder', wrap(async () => { const r = await dialog.showOpenDialog(win, { properties: ['openDirectory'] }); return r.canceled ? null : r.filePaths[0]; }));
   ipcMain.handle('scan', wrap(async ({ kind, paths }) => {
     if (!paths || !paths.length) {
@@ -149,9 +150,11 @@ function registerIpc() {
     return s;
   }));
   ipcMain.handle('resolve', wrap(a => library.resolve(a)));
-  ipcMain.handle('library:list', wrap(mode => store.list(mode)));
+  ipcMain.handle('library:list', wrap(async mode => { await library.backfillGenerics(mode).catch(() => {}); await library.importPrebuilt(mode).catch(() => {}); return store.list(mode); }));
   ipcMain.handle('library:load', wrap(({ mode, id }) => library.load(mode, id)));
   ipcMain.handle('library:save', wrap(({ mode, album }) => library.saveEdited(mode, album)));
+  ipcMain.handle('art:data', wrap(f => library.readData(f)));
+  ipcMain.handle('art:saveData', wrap(({ dataUrl, name }) => library.saveData(dataUrl, name)));
   ipcMain.handle('library:delete', wrap(({ mode, id }) => { store.remove(mode, id); return true; }));
   ipcMain.handle('release:search', wrap(a => providers.searchReleases(a)));
   ipcMain.handle('release:fetch', wrap(a => library.fetchRelease(a)));
