@@ -89,6 +89,11 @@
           x.fillStyle = 'rgba(0,0,0,.85)'; x.beginPath(); x.arc(cx, cy, Math.max(2, m * gd.hole), 0, Math.PI * 2); x.fill();
           x.strokeStyle = 'rgba(255,255,255,.85)'; x.stroke();
         }
+        if (gd.boxes) {                               // extra outlines on top of a mask (e.g. the MiniDisc slider, which moves)
+          x.globalCompositeOperation = 'source-over'; x.setLineDash([5, 4]); x.strokeStyle = 'rgba(255,255,255,.9)'; x.lineWidth = 1.5; x.fillStyle = '#fff'; x.font = '12px sans-serif'; x.textAlign = 'center';
+          for (const [a, b, cc, d, t] of gd.boxes) { x.strokeRect(a * fw, b * fh, (cc - a) * fw, (d - b) * fh); if (t) x.fillText(t, (a + cc) / 2 * fw, (b + d) / 2 * fh + 4); }
+          x.setLineDash([]);
+        }
         c.drawImage(g, 0, 0);
       };
       const draw = () => {

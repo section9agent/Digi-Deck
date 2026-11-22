@@ -5,24 +5,28 @@
   // stand spine-out (5.5 x 4.875 in case, 3/8 in spine; 3" case 3 13/16 x 3 3/8), 3" CDs on their own shelf.
   const PX = { vinylFront: 13, spine: 36 };
   const KINDS = {
-    lp: { label: '12″ records', w: 12 * PX.vinylFront }, sev: { label: '7″ records', w: 7 * PX.vinylFront },
+    lp: { label: '12″ records', w: 12 * PX.vinylFront }, shp: { label: 'Shaped records', w: 10 * PX.vinylFront }, ten: { label: '10″ records', w: 10 * PX.vinylFront }, sev: { label: '7″ records', w: 7 * PX.vinylFront },
     cd5: { label: 'CDs', spineW: 3 / 8, spineH: 4.875 }, cd3: { label: '3″ CDs', spineW: 3 / 8, spineH: 3.375 },
     cas: { label: 'Cassettes', spineW: 5 / 8, spineH: 4.25 }, cas1: { label: 'Cassette singles', spineW: 1 / 2, spineH: 4 },
     mc: { label: 'Microcassettes', spineW: 1 / 2, spineH: 2 + 3 / 16, sc: 1.5 },
+    mdr: { label: 'MiniDiscs - retail cases', spineW: 5 / 8, spineH: 4 + 5 / 16 },                 // 3 1/3 x 4 5/16 x 5/8 in
+    mds: { label: 'MiniDiscs - slim cases', spineW: 5 / 16, spineH: 3 + 1 / 8, sc: 1.25 },           // 2 13/16 x 3 1/8 x 5/16 in
+    dat: { label: 'DAT tapes', spineW: 0.44, spineH: 3.13, sc: 1.25 },                              // case about 60 x 80 x 14 mm (tape 73 x 54 x 10.5 mm), stood spine-out
     rl: { label: 'Reels', spineW: 0.85, spineH: 7.5, sc: 0.8 }                     // retail box 7.25-7.75 in square, 5/8 - 1 in deep: stood spine-out       // case 1 1/2 x 2 3/16 x 1/2 in; drawn 1.5x so the little spines stay readable
   };
   const PXI = k => PX.spine * (KINDS[k].sc || 1);
   const infoOf = (a, mode) => {
     const n = a.track_count || 1, d = (a.total_sec || 0) / n;
-    return S.releaseInfo({ release_type: a.release_type, kind: a.kind, disc_size: a.disc_size, sides: a.sides, tracks: Array.from({ length: n }, () => ({ duration: d })) }, mode);
+    return S.releaseInfo({ release_type: a.release_type, kind: a.kind, disc_size: a.disc_size, shaped: a.shaped, sides: a.sides, md_disc: a.md_disc, md_case: a.md_case, is_generic: a.is_generic, front: a.front, tracks: Array.from({ length: n }, () => ({ duration: d })) }, mode);
   };
-  const kindOf = (a, mode) => { const i = infoOf(a, mode); return mode === 'vinyl' ? (i.seven ? 'sev' : 'lp') : mode === 'cd' ? (i.small ? 'cd3' : 'cd5') : mode === 'micro' ? 'mc' : mode === 'reel' ? 'rl' : (i.type === 'single' ? 'cas1' : 'cas'); };
+  const kindOf = (a, mode) => { const i = infoOf(a, mode); return mode === 'vinyl' ? (i.shaped ? 'shp' : i.seven ? 'sev' : i.inch === 10 ? 'ten' : 'lp') : mode === 'cd' ? (i.small ? 'cd3' : 'cd5') : mode === 'micro' ? 'mc' : mode === 'reel' ? 'rl' : mode === 'md' ? (i.case === 'small' ? 'mds' : 'mdr') : mode === 'dat' ? 'dat' : (i.type === 'single' ? 'cas1' : 'cas'); };
   // ---- wrap-around artwork -------------------------------------------------------------------------------------
   // CD "back" = tray card: [spine | back panel | spine]; cassette "J-card" = [back flap | spine | cover]. Returns the pixel rectangles
   // ({x,w} of the full-height strips) or null when the picture is an ordinary single-panel image.
   // the J-card of a tape: its own art, or (microcassette, no info) the generic J-card layout carrying the playlist name
-  const wrapOf = (a, small) => S.app.mode === 'cd' ? (a.back ? loadImg(a.back) : Promise.resolve(null)) : a.jcard ? loadImg(a.jcard).then(im => im && a.jcard_adj ? S.applyAdj(im, a.jcard_adj) : im).then(im => im && S.app.mode === 'cassette' && a.is_generic ? genericText(im, a, small) : im)
-    : S.app.mode === 'micro' ? Promise.resolve(S.microJcard(a)) : Promise.resolve(null);
+  const mdTray = a => S.app.mode === 'md' && infoOf(a, 'md').case !== 'small';          // MiniDisc retail case: tray card like a CD
+  const wrapOf = (a, small) => S.app.mode === 'cd' || mdTray(a) ? (a.back ? loadImg(a.back) : Promise.resolve(null)) : a.jcard ? loadImg(a.jcard).then(im => im && a.jcard_adj ? S.applyAdj(im, a.jcard_adj) : im).then(im => im && S.app.mode === 'cassette' && a.is_generic ? genericText(im, a, small) : im)
+    : S.app.mode === 'micro' ? Promise.resolve(S.microJcard(a)) : S.app.mode === 'dat' ? S.datJcard(a) : Promise.resolve(null);
   // a generic cassette J-card has no album info of its own: write the artist and title on its spine and cover
   function genericText(im, a, small) {
     const g = jCard(im, small, false); if (!g) return im;
@@ -44,8 +48,8 @@
   }
   const loadImg = src => new Promise(res => { const im = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => res(im); im.onerror = () => res(null); im.src = S.fileUrl(src); });
   function trayCard(im) {
-    const W = im.naturalWidth, H = im.naturalHeight; if (W / H < 1.2) return null;
-    let l = Math.round(W * 0.0425), r = l;                          // default: each spine is ~4.25% of the width (the tray layout reference)
+    const md = S.app.mode === 'md', W = im.naturalWidth || im.width, H = im.naturalHeight || im.height; if (W / H < (md ? 0.95 : 1.2)) return null;
+    let l = Math.round(W * (md ? 0.0987 : 0.0425)), r = l;                 // MiniDisc tray layout: each spine ~9.9% of the width                          // default: each spine is ~4.25% of the width (the tray layout reference)
     try {                                                           // supplied art separates the spines with plain white fold lines: find them
       const sw = Math.min(W, 600), c = S.newCanvas(sw, 40), x = c.getContext('2d'); x.drawImage(im, 0, 0, sw, 40);
       const d = x.getImageData(0, 0, sw, 40).data, white = Array.from({ length: sw }, (_, i) => { for (let y = 0; y < 40; y++) { const o = (y * sw + i) * 4; if (d[o] < 246 || d[o + 1] < 246 || d[o + 2] < 246) return false; } return true; });
@@ -71,13 +75,28 @@
     return c;
   }
   S.cdCaseArt = cdCase;
+  S.mdCaseArt = a => mdCase(a);
   // the cover panel of a tape's J-card (or null when there is no J-card art)
   S.tapeJcardParts = async (a, small) => { const im = await wrapOf(a, small), g = im && jCard(im, small, S.app.mode === 'micro'); return g ? { cover: crop(im, g.cover, g.H), spine: crop(im, g.spine, g.H), flap: g.flap.w > 4 ? crop(im, g.flap, g.H) : null, flapFrac: g.flap.w / g.cover.w } : null; };
   S.tapeCoverArt = async (a, small) => { const im = await wrapOf(a, small), g = im && jCard(im, small, S.app.mode === 'micro'); return g ? crop(im, g.cover, g.H) : null; };
+  // MiniDisc retail case seen from the front: the cover in the case's window (assets/md/case-retail.png has the window cut out)
+  async function mdCase(a) {
+    const caseIm = await new Promise(res => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = '../../assets/md/case-retail.png'; }), cov = a.front ? await loadImg(a.front) : null;
+    if (!caseIm) return null;
+    const W = caseIm.naturalWidth, H = caseIm.naturalHeight, c = S.newCanvas(W, H), x = c.getContext('2d');
+    const r = [0.1454 * W, 0.0343 * H, (0.9447 - 0.1454) * W, (0.956 - 0.0343) * H];
+    S.drawCover(x, cov || S.generic.cover(a.title, a.artist, 800), r[0], r[1], r[2], r[3]);
+    x.drawImage(caseIm, 0, 0); return c;
+  }
   function jCard(im, small, micro) {
     const W = im.naturalWidth || im.width, H = im.naturalHeight || im.height; if (W / H < 0.9) return null;
     // proportions measured on a real J-card scan; microcassette: from the supplied generic J-card (flap 91 | spine 104 | cover 407 of 605 x 596)
-    const cw = Math.round(H * (micro ? 407 / 596 : small ? 2.5625 / 4 : 2.75 / 4.25)), sw = Math.round(H * (micro ? 104 / 596 : small ? 0.125 : 0.1326));     // measured on a real J-card scan
+    const md = S.app.mode === 'md';                // MiniDisc slim case J-card (layout reference): flap 123 | spine 62 | cover 790 of 975 x 845
+    if (S.app.mode === 'dat') {                    // DAT case J-card (layout reference): flap 200 | spine 121 | cover 638 of 959 x 860 - a portrait cover
+      const cw = Math.round(H * 638 / 860), sw = Math.round(H * 121 / 860); if (cw + sw >= W) return null;
+      return { W, H, flap: { x: 0, w: W - cw - sw }, spine: { x: W - cw - sw, w: sw }, cover: { x: W - cw, w: cw } };
+    }
+    const cw = Math.round(H * (md ? 790 / 845 : micro ? 407 / 596 : small ? 2.5625 / 4 : 2.75 / 4.25)), sw = Math.round(H * (md ? 62 / 845 : micro ? 104 / 596 : small ? 0.125 : 0.1326));     // measured on a real J-card scan
     if (cw + sw >= W) return null;
     return { W, H, flap: { x: 0, w: W - cw - sw }, spine: { x: W - cw - sw, w: sw }, cover: { x: W - cw, w: cw } };
   }
@@ -109,7 +128,7 @@
       shelf.btnWipe = el('button', { class: 'danger', onclick: () => shelf.removeAll() }, 'Clear shelf');
       shelf.body = el('div', { class: 'shelf-body', onscroll: () => shelf.unpop() });
       root.replaceChildren(el('div', { class: 'shelf-top' },
-        el('h2', {}, `${mode==="micro"?"Microcassette":mode==="reel"?"Reel to reel":mode[0].toUpperCase() + mode.slice(1)} shelf`), shelf.count, el('div', { class: 'spacer' }), search, sort, shelf.btnScan, shelf.btnSel, shelf.btnAll, shelf.btnDel, shelf.btnWipe,
+        el('h2', {}, `${mode==="micro"?"Microcassette":mode==="reel"?"Reel to reel":mode==="md"?"MiniDisc":mode==="dat"?"DAT":mode[0].toUpperCase() + mode.slice(1)} shelf`), shelf.count, el('div', { class: 'spacer' }), search, sort, shelf.btnScan, shelf.btnSel, shelf.btnAll, shelf.btnDel, shelf.btnWipe,
         el('button', { onclick: shelf.close }, 'Close')), shelf.body);
       shelf._esc = e => { if (e.key === 'Escape' && !$('#modal').hidden === false) shelf.close(); };
       window.addEventListener('keydown', shelf._esc);
@@ -160,10 +179,11 @@
       shelf.count.textContent = `${list.length} of ${shelf.items.length}`;
       shelf.body.replaceChildren();
       if (!list.length) { shelf.body.append(el('div', { class: 'shelf-empty' }, shelf.items.length ? 'Nothing matches your search.' : `Your ${mode} shelf is empty.\nOpen an album and it will be filed here automatically.`)); return; }
-      const order = mode === 'vinyl' ? ['lp', 'sev'] : mode === 'cd' ? ['cd5', 'cd3'] : mode === 'micro' ? ['mc'] : mode === 'reel' ? ['rl'] : ['cas', 'cas1'];
+      const order = mode === 'vinyl' ? ['lp', 'ten', 'sev', 'shp'] : mode === 'cd' ? ['cd5', 'cd3'] : mode === 'micro' ? ['mc'] : mode === 'reel' ? ['rl'] : mode === 'md' ? ['mdr', 'mds'] : mode === 'dat' ? ['dat'] : ['cas', 'cas1'];
       const groups = Object.fromEntries(order.map(k => [k, []]));
       list.forEach(a => groups[kindOf(a, mode)].push(a));
-      order.forEach(k => {
+      order.forEach((k, oi) => {
+        if (oi > 0 && !groups[k].length) return;                // the extra shelves only show once something is on them
         shelf.body.append(el('div', { class: 'shelf-label' }, KINDS[k].label, el('small', {}, `${groups[k].length}`)));
         if (!groups[k].length) { shelf.body.append(el('div', { class: 'shelf-none' }, 'Nothing on this shelf yet')); return; }
         const spine = mode !== 'vinyl', iw = spine ? KINDS[k].spineW * PXI(k) : KINDS[k].w, gap = spine ? 3 : 18;
@@ -183,7 +203,16 @@
     item(a, mode, k) {
       const w = KINDS[k].w, h = w;
       const cov = el('div', { class: 'cov' });
-      if (a.front) cov.append(el('img', { src: S.fileUrl(a.front), loading: 'lazy', onerror: e => e.target.replaceWith(S.generic.cover(a.title, a.artist, 300)) }));
+      // shaped records: a clear PVC sleeve the size of the record (the record shows through it, or the cover art sits behind it)
+      if (k === 'shp' && a.pic_a) {
+        const box = el('div', { class: 'item ' + mode + ' pvc' + (shelf.sel.has(a.id) ? ' sel' : ''), style: { '--w': w + 'px', '--h': h + 'px' }, title: `${a.artist} – ${a.title}`, onclick: () => shelf.click(a) },
+          cov, el('div', { class: 'tag' }, el('b', {}, a.title || 'Untitled'), el('span', {}, a.artist || '')));
+        S.shapedSleeve(a, 360).then(c => { c.className = 'pvc-cv'; cov.replaceChildren(c); });
+        S.shapedInches(a).then(inch => { if (inch) { const px = S.clamp(inch, 3, 14) * PX.vinylFront; box.style.setProperty('--w', px + 'px'); box.style.setProperty('--h', px + 'px'); } });
+        return box;
+      }
+      if (a.front) { const im = el('img', { src: S.fileUrl(a.front), loading: 'lazy', onerror: e => e.target.replaceWith(S.generic.cover(a.title, a.artist, 300)) }); cov.append(im);
+        if (mode === 'vinyl') S.holeCover(a, 'front', 400).then(c => { if (c && im.isConnected) im.replaceWith(c); }); }
       else cov.append(S.generic.cover(a.title, a.artist, 300));
       return el('div', { class: 'item ' + mode + (shelf.sel.has(a.id) ? ' sel' : ''), style: { '--w': w + 'px', '--h': h + 'px' }, title: `${a.artist} – ${a.title}`, onclick: () => shelf.click(a) },
         cov, el('div', { class: 'tag' }, el('b', {}, a.title || 'Untitled'), el('span', {}, a.artist || (a.kind === 'set' ? 'Playlist' : ''))));
@@ -194,7 +223,7 @@
       const cv = S.newCanvas(Math.round(wpx * Q), Math.round(hpx * Q)); cv.style.width = wpx + 'px'; cv.style.height = hpx + 'px';
       const paint = cols => { cv._cols = cols; shelf.paintSpine(cv, a, cols); };
       const fallback = () => { const h = hash((a.artist || '') + (a.title || '')) % 360; paint([`hsl(${h} 40% 26%)`, `hsl(${h} 40% 15%)`]); };
-      const wrapSrc = mode_ => mode_ === 'cd' ? a.back : a.jcard;
+      const wrapSrc = mode_ => mode_ === 'cd' || k === 'mdr' ? a.back : a.jcard;
       const wrapped = wrapSrc(S.app.mode);
       if (S.app.mode === 'reel') {                                  // the box spine: its own image, or a generated one carrying the artist and title
         (a.spine ? loadImg(a.spine) : Promise.resolve(null)).then(im => {
@@ -202,9 +231,9 @@
           cv._wrap = { im: src, r: { x: 0, w: W }, H };
           cv.getContext('2d').drawImage(src, 0, 0, W, H, 0, 0, cv.width, cv.height);
         });
-      } else if (wrapped || S.app.mode === 'micro') {
+      } else if (wrapped || S.app.mode === 'micro' || S.app.mode === 'dat') {
         wrapOf(a, k === 'cas1').then(im => {
-          const g = im && (S.app.mode === 'cd' ? trayCard(im) : jCard(im, k === 'cas1', S.app.mode === 'micro'));
+          const g = im && (S.app.mode === 'cd' || k === 'mdr' ? trayCard(im) : jCard(im, k === 'cas1', S.app.mode === 'micro'));
           if (!g) return plain();
           cv._wrap = { im, r: g.spine, H: g.H };
           cv.getContext('2d').drawImage(im, g.spine.x, 0, g.spine.w, g.H, 0, 0, cv.width, cv.height);
@@ -250,8 +279,9 @@
       x.fillStyle = g; x.fillRect(0, 0, W, H);
       x.fillStyle = 'rgba(255,255,255,.28)'; x.fillRect(0, 0, 3, H); x.fillRect(W - 3, 0, 3, H);     // plastic edges
       x.fillStyle = 'rgba(0,0,0,.35)'; x.fillRect(3, 0, 2, H); x.fillRect(W - 5, 0, 2, H);
-      x.fillStyle = 'rgba(255,255,255,.9)'; x.fillRect(W * .22, 10, W * .56, Math.round(W * .34));     // top label strip
-      x.fillStyle = '#222'; x.font = `700 ${Math.round(W * .26)}px Helvetica, Arial, sans-serif`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(S.app.mode === 'cd' ? 'CD' : 'MC', W / 2, 10 + W * .17);
+      if (S.app.mode !== 'md') { x.fillStyle = 'rgba(255,255,255,.9)'; x.fillRect(W * .22, 10, W * .56, Math.round(W * .34)); }     // top label strip
+      x.fillStyle = '#222'; x.font = `700 ${Math.round(W * .26)}px Helvetica, Arial, sans-serif`; x.textAlign = 'center'; x.textBaseline = 'middle'; if (S.app.mode === 'md') { const lw = W * .56, top = 10; S.mdLogo('black').then(im => { if (im) { x.fillStyle = 'rgba(255,255,255,.9)'; x.fillRect(W * .2, top - 2, W * .6, lw * im.naturalHeight / im.naturalWidth + 4); x.drawImage(im, W * .22, top, lw, lw * im.naturalHeight / im.naturalWidth); } }); }
+      else x.fillText(S.app.mode === 'cd' ? 'CD' : 'MC', W / 2, 10 + W * .17);
       const top = 10 + W * .34 + 16, room = H - top - 14, artist = (a.artist || '').toUpperCase(), title = a.title || 'Untitled';
       x.save(); x.translate(W / 2, top); x.rotate(Math.PI / 2); x.textAlign = 'left'; x.textBaseline = 'middle'; x.fillStyle = '#fff';
       let size = Math.round(W * .4);
@@ -269,12 +299,22 @@
       const close = () => { ov.remove(); window.removeEventListener('keydown', onKey, true); };
       const onKey = e => { if (e.key === 'Escape') { e.stopPropagation(); close(); } };
       let alt = false;                       // CD / vinyl: showing the back;  cassette: showing the whole J-card instead of just the cover
-      const art = el('div', { class: 'pv-art ' + mode + (kind === 'cd3' || kind === 'cas1' ? ' small' : '') + (kind === 'sev' ? ' seven' : '') });
-      const place = (node, cls = '') => { art.className = 'pv-art ' + mode + cls + (kind === 'cd3' || kind === 'cas1' ? ' small' : '') + (kind === 'sev' ? ' seven' : ''); art.replaceChildren(node); };
+      const art = el('div', { class: 'pv-art ' + mode + (kind === 'cd3' || kind === 'cas1' ? ' small' : '') + (kind === 'sev' ? ' seven' : kind === 'ten' ? ' ten' : '') });
+      const place = (node, cls = '') => { art.className = 'pv-art ' + mode + cls + (kind === 'cd3' || kind === 'cas1' ? ' small' : '') + (kind === 'sev' ? ' seven' : kind === 'ten' ? ' ten' : ''); art.replaceChildren(node); };
       const plainImg = src => src ? el('img', { class: 'pv-img', src: S.fileUrl(src), onerror: e => e.target.replaceWith(S.generic.cover(a.title, a.artist, 600)) }) : S.generic.cover(a.title, a.artist, 600);
       const draw = async () => {
         const tok = ++shelf._pvTok; let node, cls = '';
-        if (S.isTape(mode) && mode !== 'reel' && (a.jcard || mode === 'micro')) {
+        if (kind === 'shp' && a.pic_a && !alt) { node = await S.shapedSleeve(a, 900); node.classList.add('pv-img'); }
+        else if (mode === 'dat') {                    // the J-card's cover (or the whole J-card), else the front picture
+          const im = await wrapOf(a, false), g = im && jCard(im, false, false);
+          if (g) { node = alt ? crop(im, { x: 0, w: g.W }, g.H) : crop(im, g.cover, g.H); node.classList.add('pv-img'); cls = ' free'; Object.assign(node.style, alt ? { width: 'min(52vw, 620px)', height: 'auto' } : { height: 'min(62vh, 520px)', width: 'auto' }); }
+        } else if (mode === 'md') {                     // retail case: the case with the cover behind its front; slim case: the J-card's cover
+          if (kind === 'mdr') {
+            if (alt && a.back) { const im = await loadImg(a.back), g = im && trayCard(im); node = g ? crop(im, g.panel, g.H) : plainImg(a.back); }
+            else node = await mdCase(a);
+          } else if (a.jcard) { const im = await wrapOf(a, false), g = im && jCard(im, false, false); node = g ? (alt ? plainImg(a.jcard) : crop(im, g.cover, g.H)) : plainImg(a.jcard); }
+          if (node) { node.classList.add('pv-img'); cls = ' free'; }
+        } else if (S.isTape(mode) && mode !== 'reel' && (a.jcard || mode === 'micro')) {
           const im = await wrapOf(a, kind === 'cas1'), g = im && jCard(im, kind === 'cas1', mode === 'micro');
           if (g) { node = alt ? (a.jcard && !(mode === 'cassette' && a.is_generic) ? plainImg(a.jcard) : crop(im, { x: 0, w: g.W }, g.H)) : crop(im, g.cover, g.H); node.classList.add('pv-img'); cls = ' free'; }
         } else if (mode === 'cd' && alt && a.back) {
@@ -282,6 +322,7 @@
           node = g ? crop(im, g.panel, g.H) : plainImg(a.back); node.classList.add('pv-img'); cls = ' free';
         }
         else if (mode === 'cd' && !alt) { node = await cdCase(a.front, a); if (node) { node.classList.add('pv-img'); cls = ' free'; } }
+        else if (mode === 'vinyl') { const h = await S.holeCover(a, alt && a.back ? 'back' : 'front'); if (h) { node = h; node.classList.add('pv-img'); cls = ' free'; } }
         if (tok !== shelf._pvTok) return;
         if (!node) {
           const src = alt && a.back && (!S.isTape(mode) || mode === 'reel') ? a.back : a.front;
@@ -292,9 +333,9 @@
         place(node, cls);
       };
       draw();
-      const canAlt = S.isTape(mode) && mode !== 'reel' ? !!(a.jcard || mode === 'micro') : !!a.back;
-      const flip = canAlt ? el('button', { onclick: () => { alt = !alt; flip.textContent = S.isTape(mode) && mode !== 'reel' ? (alt ? 'Show cover' : 'Show full J-card') : (alt ? 'Show front' : 'Show back'); draw(); } }, S.isTape(mode) && mode !== 'reel' ? 'Show full J-card' : 'Show back') : null;
-      const desc = S.describe({ release_type: a.release_type, kind: a.kind, disc_size: a.disc_size, sides: a.sides, tracks: Array.from({ length: n }, () => ({ duration: (a.total_sec || 0) / n })) }, mode);
+      const canAlt = mode === 'dat' ? true : mode === 'md' ? !!(kind === 'mdr' ? a.back : a.jcard) : S.isTape(mode) && mode !== 'reel' ? !!(a.jcard || mode === 'micro') : !!a.back;
+      const flip = canAlt ? el('button', { onclick: () => { alt = !alt; flip.textContent = (S.isTape(mode) && mode !== 'reel') || (mode === 'md' && kind === 'mds') || mode === 'dat' ? (alt ? 'Show cover' : 'Show full J-card') : (alt ? 'Show front' : 'Show back'); draw(); } }, (S.isTape(mode) && mode !== 'reel') || (mode === 'md' && kind === 'mds') || mode === 'dat' ? 'Show full J-card' : 'Show back') : null;
+      const desc = S.describe({ release_type: a.release_type, kind: a.kind, disc_size: a.disc_size, shaped: a.shaped, shape_size: a.shape_size, shape_fit: a.shape_fit, sides: a.sides, md_disc: a.md_disc, md_case: a.md_case, is_generic: a.is_generic, front: a.front, tracks: Array.from({ length: n }, () => ({ duration: (a.total_sec || 0) / n })) }, mode);
       const ov = el('div', { class: 'pv-ov', onclick: e => { if (e.target === ov) close(); } },
         el('div', { class: 'pv-card' }, art,
           el('div', { class: 'pv-info' },

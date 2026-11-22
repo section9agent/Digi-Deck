@@ -218,13 +218,14 @@ t('findAlbumDirs: one entry per album folder, multi-disc folded into the parent,
     fs.mkdirSync(pre);
     const store = new Store(path.join(d, 'db'));
     const lib = new Library({ store, providers: { getSettings: () => ({ prebuiltDir: pre, unidentifiedSave: 'ask' }), cacheDir: path.join(d, 'cache') }, artDir: art });
-    if (!fs.existsSync(path.join(__dirname, '..', 'assets', 'micro', 'prebuilt', 'albums.json'))) { pass++; console.log('ok   microcassette prebuilt import (skipped - this build has no pre-made database)'); throw { skip: 1 }; }
-    lib.prebuiltDirs = () => [pre]; fs.copyFileSync(path.join(__dirname, '..', 'assets', 'micro', 'prebuilt', 'albums.json'), path.join(pre, 'albums.json'));   // only the test folder, never the real images
+    // its own small sample database, so the test doesn't depend on what the real pre-made database holds
+    lib.prebuiltDirs = () => [pre]; lib.prebuiltEnabled = () => true;   // (a build-flags.json or settings may switch the real one off)
+    fs.writeFileSync(path.join(pre, 'albums.json'), JSON.stringify([{ artist: 'A Tribe  Called Quest', title: 'Midnight Marauders', jcard: 'tribe-midjcard.png', labels: ['tribe-midsidea.png', 'tribe-midsideb.png'], color: 'Yellow' }]));
     fs.writeFileSync(path.join(pre, 'tribe-midjcard.png'), 'x'); fs.writeFileSync(path.join(pre, 'tribe-midsidea.png'), 'x');
     (async () => {
       const n = await lib.importPrebuilt('micro');
       const a = store.getByKey('micro', albumKey({ kind: 'album', artist: 'A Tribe Called Quest', title: 'Midnight Marauders', tracks: [] }));
-      assert.ok(n >= 1 && a && a.jcard && a.label_a && !a.label_b, 'prebuilt album imported with the images that exist');
+      assert.ok(n >= 1 && a && a.jcard && a.label_a && !a.label_b, `prebuilt album imported with the images that exist (imported ${n}; found ${a ? JSON.stringify({ jcard: !!a.jcard, label_a: !!a.label_a, label_b: !!a.label_b }) : 'no album'})`);
       fs.writeFileSync(path.join(pre, 'tribe-midsideb.png'), 'x');
       await lib.importPrebuilt('micro');
       const b = store.getById('micro', a.id); assert.ok(b.label_b, 'later image picked up on next run');

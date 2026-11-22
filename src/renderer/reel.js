@@ -248,7 +248,7 @@
       this.deck = e('div', { class: 'deck rr-deck' });
       this.art = e('img', { class: 'rr-art', draggable: 'false', alt: '' });
       this.art.onerror = () => { this.art.onerror = null; this.artCv = paintDeck(1.5); this.artCv.toBlob(b => { if (b && this.art) this.art.src = URL.createObjectURL(b); }); };
-      this.art.src = A + 'reel/deck-front.png';
+      S.skin.bind(this.art, A + 'reel/deck-front.png');
       const wrap = c0 => { const w = e('div', { class: 'rr-reel' }), cv = e('canvas', { class: 'rr-spin' }); w.append(cv); pct(w, c0.x - RR, c0.y - RR, RR * 2, RR * 2); return { w, cv }; };
       this.L = wrap(LC); this.R = wrap(RC);
       this.tapeCv = e('canvas', { class: 'rr-tape' }); this.tapeCv.width = DW / 2; this.tapeCv.height = DH / 2; pct(this.tapeCv, 0, 0, DW, DH);
@@ -256,7 +256,7 @@
         const c = e('canvas', { class: 'rr-live' }), im = new Image(); c.width = 424; c.height = 848; pct(c, MET[i].x + 0.3, MET[i].y + 1, 141.3, 282.7);
         im.onload = () => { c._face = im; }; im.src = src; return c;
       });
-      const part = (src, cx, cy, d, cls) => { const i = e('canvas', { class: 'rr-live ' + cls }); i.width = i.height = Math.round(d * 3); pct(i, cx - d / 2, cy - d / 2, d, d); const im = new Image(); im.onload = () => { i._im = im; this.drawPart(i, 0); }; im.src = src; return i; };
+      const part = (src, cx, cy, d, cls) => { const i = e('canvas', { class: 'rr-live ' + cls }); i.width = i.height = Math.round(d * 3); pct(i, cx - d / 2, cy - d / 2, d, d); S.skin.bind(i, src, u => { const im = new Image(); im.onload = () => { i._im = im; this.drawPart(i, 0); }; im.src = u; }); return i; };
       this.wheels = [part(A + 'reel/idler.png', 676.7, 828.7, 124, 'rr-wheel'), part(A + 'reel/idler.png', 1293.3, 828, 124, 'rr-wheel')];     // the big idler wheels turn clockwise
       this.caps = [part(A + 'reel/capstan.png', 676, 745.3, 33.4, 'rr-cap'), part(A + 'reel/capstan.png', 1294, 745.3, 33.4, 'rr-cap')];         // the capstans turn anticlockwise
       this.angW = 0; this.angC = 0;
@@ -528,7 +528,7 @@
       this.knob.style.setProperty('--r', (-135 + S.app.audio.volume * 270) + 'deg');
       this.deck.classList.toggle('playing', st.playing);
     }
-    destroy() { this._ro.disconnect(); if (this.art.src) URL.revokeObjectURL(this.art.src); this.deck.remove(); }
+    destroy() { this._ro.disconnect(); if (this.artCv && this.art.src) URL.revokeObjectURL(this.art.src); this.deck.remove(); }
   }
   S.stages = S.stages || {};
   S.stages.reel = ReelStage;

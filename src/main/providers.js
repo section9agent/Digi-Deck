@@ -17,9 +17,9 @@ function parseDuration(d) { // "3:45" | "1:02:03" | "" -> seconds
 }
 
 // Format-specific lookups: each mode wants the artwork of ITS release (12" LP vs CD vs cassette), not one shared cover.
-const MB_FORMATS = { vinyl: ['Vinyl', '7" Vinyl', '10" Vinyl', '12" Vinyl'], cd: ['CD', 'CD-R', 'Enhanced CD', 'HDCD', 'SACD', 'Copy Control CD', 'DualDisc'], cassette: ['Cassette'], micro: ['Cassette'], reel: ['Reel-To-Reel'] };
-const DISCOGS_FORMAT = { vinyl: 'Vinyl', cd: 'CD', cassette: 'Cassette', micro: 'Cassette', reel: 'Reel-To-Reel' };
-const FORMAT_RE = { vinyl: /vinyl|\blp\b|12"|7"|10"|45 rpm|33 ⅓/i, cd: /\bcd\b|compact disc|sacd|hdcd/i, cassette: /cassette|\btape\b|\bmc\b/i, micro: /micro-?cassette|cassette|\btape\b|\bmc\b/i, reel: /reel|\btape\b|\b7 1\/2 ips\b/i };
+const MB_FORMATS = { vinyl: ['Vinyl', '7" Vinyl', '10" Vinyl', '12" Vinyl'], cd: ['CD', 'CD-R', 'Enhanced CD', 'HDCD', 'SACD', 'Copy Control CD', 'DualDisc'], cassette: ['Cassette'], micro: ['Cassette'], reel: ['Reel-To-Reel'], md: ['MiniDisc'] };
+const DISCOGS_FORMAT = { vinyl: 'Vinyl', cd: 'CD', cassette: 'Cassette', micro: 'Cassette', reel: 'Reel-To-Reel', md: 'Minidisc' };
+const FORMAT_RE = { vinyl: /vinyl|\blp\b|12"|7"|10"|45 rpm|33 ⅓/i, cd: /\bcd\b|compact disc|sacd|hdcd/i, cassette: /cassette|\btape\b|\bmc\b/i, micro: /micro-?cassette|cassette|\btape\b|\bmc\b/i, reel: /reel|\btape\b|\b7 1\/2 ips\b/i, md: /mini ?disc|\bmd\b/i };
 
 class Providers {
   constructor({ cacheDir, getSettings }) {
@@ -163,7 +163,7 @@ class Providers {
     // exact = taken from the very release (pressing) we matched in this format; fmt = only valid for that format
     const add = (source, slot, url, note = '', thumb = '', extra = {}) => { if (url && !c.some(x => x.url === url)) c.push({ source, slot, url, thumb: thumb || url, note, exact: false, ...extra }); };
     const s = this.getSettings();
-    const fmtName = { vinyl: 'vinyl', cd: 'CD', cassette: 'cassette', micro: 'microcassette', reel: 'reel to reel' }[mode] || '';
+    const fmtName = { vinyl: 'vinyl', cd: 'CD', cassette: 'cassette', micro: 'microcassette', reel: 'reel to reel', md: 'MiniDisc' }[mode] || '';
 
     const fmtOk = !FORMAT_RE[mode] || !format || FORMAT_RE[mode].test(format);   // is the matched release really in this format?
     discogsImages.forEach((im, i) => {
@@ -229,7 +229,7 @@ class Providers {
       } catch {}
     }
     // the editor lists the wanted format first, then generic art; art that belongs to another format is hidden
-    const list = c.filter(x => !x.fmt || !mode || x.fmt === (mode === 'micro' ? 'cassette' : mode)).sort((a, b) => (b.exact ? 1 : 0) - (a.exact ? 1 : 0));
+    const list = c.filter(x => !x.fmt || !mode || x.fmt === (mode === 'micro' || mode === 'dat' ? 'cassette' : mode)).sort((a, b) => (b.exact ? 1 : 0) - (a.exact ? 1 : 0));
     return { candidates: list, mbid, rgid };
   }
 
@@ -238,12 +238,12 @@ class Providers {
     const rank = { front: ['coverartarchive', 'discogs', 'fanart', 'audiodb', 'itunes', 'deezer'], back: ['coverartarchive', 'discogs', 'audiodb'], label: ['coverartarchive', 'fanart', 'audiodb', 'discogs'], jcard: ['coverartarchive'] };
     const pick = (slot, n = 0) => {
       const order = rank[slot] || [];
-      const list = cands.filter(x => x.slot === slot && (!x.fmt || !mode || x.fmt === (mode === 'micro' ? 'cassette' : mode)))
+      const list = cands.filter(x => x.slot === slot && (!x.fmt || !mode || x.fmt === (mode === 'micro' || mode === 'dat' ? 'cassette' : mode)))
         .sort((a, b) => (b.exact ? 1 : 0) - (a.exact ? 1 : 0) || order.indexOf(a.source) - order.indexOf(b.source));
       return list[n] || null;
     };
     const out = { front: pick('front'), back: pick('back'), jcard: pick('jcard') };
-    const n = mode === 'cd' ? Math.max(1, Math.min(8, sides)) : mode === 'vinyl' || mode === 'cassette' || mode === 'micro' || mode === 'reel' ? Math.max(2, Math.min(8, sides)) : 2;
+    const n = mode === 'cd' || mode === 'md' || mode === 'dat' ? Math.max(1, Math.min(8, sides)) : mode === 'vinyl' || mode === 'cassette' || mode === 'micro' || mode === 'reel' ? Math.max(2, Math.min(8, sides)) : 2;
     for (let i = 0; i < n; i++) out['label_' + 'abcdefgh'[i]] = pick('label', i);
     return out;
   }

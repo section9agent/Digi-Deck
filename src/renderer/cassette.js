@@ -149,17 +149,17 @@
     build() {
       const e = S.el;
       this.deck = e('div', { class: 'deck' });
-      this.art = e('img', { class: 'deck-art', src: A + 'deck/deck-normal.png', draggable: 'false' });
+      this.art = e('img', { class: 'deck-art', draggable: 'false' }); this.artB = S.skin.bind(this.art, A + 'deck/deck-normal.png');
       this.stageEl = e('div', { class: 'cas-stage' });
       this.flipper = e('div', { class: 'cas-flip' });
       this.slots = [e('div', { class: 'cas-slot front' }), e('div', { class: 'cas-slot back' })];
       this.edges = ['l', 'r', 't', 'b'].map(k => e('div', { class: 'cas-edge ' + k }));
       this.flipper.append(...this.edges, ...this.slots); this.stageEl.append(this.flipper);
       this.lcd = S.newCanvas(1344, 560); this.lcd.className = 'deck-live';
-      const b = (title, fn, cls = '') => { const k = e('button', { class: 'deck-key ' + cls, title, onclick: fn }); k.style.backgroundImage = `url(${A}deck/keys/${cls || title.toLowerCase()}.png)`; return k; };
+      const b = (title, fn, cls = '') => { const k = e('button', { class: 'deck-key ' + cls, title, onclick: fn }); S.skin.bind(k, `${A}deck/keys/${cls || title.toLowerCase()}.png`, 'bg'); return k; };
       this.playKey = b('Play / Pause', () => S.app.togglePlay(), 'play'); this.flipKey = b('Flip cassette', () => S.app.manualFlip(), 'flip');
       this.keyEls = [b('Previous', () => S.app.prev(), 'prev'), this.playKey, b('Stop', () => S.app.stop(), 'stop'), b('Next', () => S.app.next(), 'next'), this.flipKey];
-      this.knobB = e('div', { class: 'deck-knob', title: 'Volume (drag or scroll)' }, e('img', { src: A + 'deck/knob-output.png', draggable: 'false' }));
+      this.knobB = e('div', { class: 'deck-knob', title: 'Volume (drag or scroll)' }, S.skin.bind(e('img', { draggable: 'false' }), A + 'deck/knob-output.png').el);
       this.deck.append(this.art, this.stageEl, this.lcd, ...this.keyEls, this.knobB);
       this.host.append(this.deck);
       dpct(this.stageEl, 237, 170, 501, 501 / AR); dpct(this.lcd, 940, 70, 672, 280);
@@ -221,7 +221,7 @@
       await this.fill(1, sides.includes(pair) ? pair : sides[1] || pair);
       this.paintEdges(S.colorOf(S.TAPE_COLORS, album.color)); this.settle();
       this.side = first; this.single = S.releaseInfo(album, 'cassette').type === 'single';
-      this.art.src = A + (this.single ? 'deck/deck-single.png' : 'deck/deck-normal.png');
+      this.artB.set(A + (this.single ? 'deck/deck-single.png' : 'deck/deck-normal.png'));
       this.flipKey.style.display = sides.length > 1 ? '' : 'none';
       this.layout();
       this.stageEl.animate([{ transform: 'translateY(-60%) scale(1.05)', opacity: 0 }, { transform: 'translateY(0) scale(1)', opacity: 1 }], { duration: 700, easing: 'ease-out' });
@@ -264,7 +264,7 @@
 
     // live parts of the display, drawn at 2x deck-art pixels over the display's baked (unlit) bars: lit segments, counter, side, time
     drawDisplay(dt, playing) {
-      const c = this.lcd, x = c.getContext('2d');
+      const LC = (S.skin && S.skin.lcd()) || '#62e8ff'; const c = this.lcd, x = c.getContext('2d');
       x.clearRect(0, 0, c.width, c.height);
       const segs = 26, X0 = 462, PITCH = 31.28, SW = 22, DB0 = -40, DB1 = 3, BAR = [{ y: 112, h: 92 }, { y: 260, h: 92 }];
       const live = playing && !this.busy ? S.meter.read() : null;   // real signal level, dB
@@ -280,14 +280,15 @@
         for (let k = 0; k < segs; k++) {
           const on = k < lit || (k === pkSeg && this.pk[ch] > 0.03);
           if (!on) continue;
-          x.fillStyle = k >= segs * 0.84 ? '#ff8a4d' : '#62e8ff'; x.shadowColor = k >= segs * 0.84 ? '#ff6a2a' : '#2fd0ff'; x.shadowBlur = 12;
+          x.fillStyle = k >= segs * 0.84 ? '#ff8a4d' : LC; x.shadowColor = k >= segs * 0.84 ? '#ff6a2a' : LC; x.shadowBlur = 12;
           x.fillRect(X0 + k * PITCH, BAR[ch].y, SW, BAR[ch].h);
         }
       }
-      x.shadowBlur = 16; x.shadowColor = '#2fd0ff'; x.fillStyle = '#62e8ff'; x.textBaseline = 'alphabetic';
-      x.font = '700 92px Consolas, "Courier New", monospace'; x.fillText(this.counter, 70, 160);
-      x.shadowBlur = 8; x.font = '700 40px Consolas, "Courier New", monospace';
-      x.fillText('SIDE ' + this.side, 70, 454); x.fillText(this.timeStr, 70, 506);
+      x.shadowBlur = 16; x.shadowColor = LC; x.fillStyle = LC; x.textBaseline = 'alphabetic';
+      const LCD = { on: LC, off: LC + '16', glow: 16 };
+      S.segText(x, this.counter, 70, 160, 92, LCD);
+      x.shadowBlur = 8; x.font = '700 40px Helvetica, Arial, sans-serif'; x.fillText('SIDE ' + this.side, 70, 454);
+      S.segText(x, this.timeStr.padStart(5, ' '), 70, 506, 40, { ...LCD, glow: 8 });
     }
 
     frame(dt, st) {

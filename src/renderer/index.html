@@ -22,12 +22,12 @@
         <img class="ico-img cas" src="../../assets/menu/cassette.png" alt="" draggable="false"><b>Cassette</b><span>Full-view tape deck, up to 90 minutes a tape</span>
       </button>
     </div>
-    <h2 class="niche-h">Niche formats <small>more coming soon</small></h2>
+    <h2 class="niche-h">Niche formats </h2>
     <div class="cards niche">
-      <button class="mode-card mini" disabled title="Coming soon"><img class="ico-img" src="../../assets/menu/dat.png" alt="" draggable="false"><b>DAT</b></button>
+      <button class="mode-card mini" data-mode="dat" title="DAT deck"><img class="ico-img" src="../../assets/menu/dat.png" alt="" draggable="false"><b>DAT</b></button>
       <button class="mode-card mini" data-mode="micro" title="Microcassette deck"><img class="ico-img" src="../../assets/menu/microcassette.png" alt="" draggable="false"><b>Microcassette</b></button>
       <button class="mode-card mini" data-mode="reel" title="Reel to reel deck"><img class="ico-img" src="../../assets/menu/reel.png" alt="" draggable="false"><b>Reel to Reel</b></button>
-      <button class="mode-card mini" disabled title="Coming soon"><img class="ico-img" src="../../assets/menu/minidisc.png" alt="" draggable="false"><b>MiniDisc</b></button>
+      <button class="mode-card mini" data-mode="md" title="MiniDisc player"><img class="ico-img" src="../../assets/menu/minidisc.png" alt="" draggable="false"><b>MiniDisc</b></button>
     </div>
   </div>
 
@@ -35,19 +35,21 @@
     <header class="top">
       <div class="brand">Digi-Deck</div>
       <div class="seg" id="modeSeg">
-        <button data-mode="vinyl">Vinyl</button><button data-mode="cd">CD</button><button data-mode="cassette">Cassette</button><button data-mode="micro">Micro</button><button data-mode="reel">Reel</button>
+        <button data-mode="vinyl">Vinyl</button><button data-mode="cd">CD</button><button data-mode="cassette">Cassette</button><button data-mode="micro">Micro</button><button data-mode="reel">Reel</button><button data-mode="md">MD</button><button data-mode="dat">DAT</button>
       </div>
       <div class="grp">
         <button id="openFiles">Open files</button>
         <button id="openFolder">Open folder</button>
         <button id="openPlaylist">Open playlist</button>
         <button id="btnClear" title="Unload the current playlist">Clear</button>
+        <button id="btnCreate" title="Design a cover, back, J-card, tray card or label for this album">Create art</button>
       </div>
       <div class="spacer"></div>
       <div class="grp">
         <button id="btnLibrary">Library</button>
+        <button id="btnAlbums" title="Play a list of whole albums, one after another">Album list</button>
         <button id="btnInfo">Edit info</button>
-        <button id="btnArt">Art</button>
+        <button id="btnArt">View Art</button>
         <button id="btnSettings" title="Settings">⚙</button>
       </div>
     </header>
@@ -74,8 +76,11 @@
   <div id="toast"></div>
 
   <script src="util.js"></script>
+  <script src="skin-pixels.js"></script>
+  <script src="skin.js"></script>
   <script src="generic.js"></script>
   <script src="labelart.js"></script>
+  <script src="mix.js"></script>
   <script src="vinyl.js"></script>
   <script src="cd.js"></script>
   <script src="cassette-layers.js"></script>
@@ -84,12 +89,17 @@
   <script src="microcassette.js"></script>
   <script src="reel.js"></script>
   <script src="shelf.js"></script>
+  <script src="md.js"></script>
+  <script src="dotmatrix.js"></script>
+  <script src="dat.js"></script>
   <script src="transit.js"></script>
   <script src="crop.js"></script>
   <script src="editor.js"></script>
   <script src="libscan.js"></script>
   <script src="fx.js"></script>
   <script src="meter.js"></script>
+  <script src="albumlist.js"></script>
+  <script src="artcreator.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
