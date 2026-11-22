@@ -53,6 +53,12 @@ jobs:
           # ffmpeg-static downloads an FFmpeg binary for the machine it installs on; for the Intel Mac build it must be the x64 one
           npm_config_arch: ${{ matrix.arch }}
 
+      # dmg-builder needs dmg-license on a Mac, but it's a Mac-only optional package, so a package-lock.json made on
+      # Windows or Linux leaves it out - install it here
+      - name: Mac DMG tools
+        if: runner.os == 'macOS'
+        run: npm install --no-save dmg-license@1.0.11
+
       - name: FFmpeg for the target Mac
         if: matrix.arch != ''
         run: |
@@ -61,6 +67,13 @@ jobs:
           file node_modules/ffmpeg-static/ffmpeg
 
       - run: npm test
+
+      # the microcassette pre-made database's pictures must be in assets/micro/prebuilt in the repo, or the builds ship without them
+      - name: Check the pre-made microcassette pictures
+        shell: bash
+        run: |
+          node scripts/check-prebuilt.js | tee prebuilt.txt
+          if grep -q 'missing - see' prebuilt.txt; then echo "::warning title=Microcassette art missing::$(head -1 prebuilt.txt) - commit the pictures to assets/micro/prebuilt"; fi
 
       - name: Package
         run: npx electron-builder ${{ matrix.args }} --publish never
