@@ -218,8 +218,9 @@ t('findAlbumDirs: one entry per album folder, multi-disc folded into the parent,
     fs.mkdirSync(pre);
     const store = new Store(path.join(d, 'db'));
     const lib = new Library({ store, providers: { getSettings: () => ({ prebuiltDir: pre, unidentifiedSave: 'ask' }), cacheDir: path.join(d, 'cache') }, artDir: art });
-    if (!fs.existsSync(path.join(__dirname, '..', 'assets', 'micro', 'prebuilt', 'albums.json'))) { pass++; console.log('ok   microcassette prebuilt import (skipped - this build has no pre-made database)'); throw { skip: 1 }; }
-    lib.prebuiltDirs = () => [pre]; fs.copyFileSync(path.join(__dirname, '..', 'assets', 'micro', 'prebuilt', 'albums.json'), path.join(pre, 'albums.json'));   // only the test folder, never the real images
+    // its own small sample database, so the test doesn't depend on what the real pre-made database holds
+    lib.prebuiltDirs = () => [pre];
+    fs.writeFileSync(path.join(pre, 'albums.json'), JSON.stringify([{ artist: 'A Tribe  Called Quest', title: 'Midnight Marauders', jcard: 'tribe-midjcard.png', labels: ['tribe-midsidea.png', 'tribe-midsideb.png'], color: 'Yellow' }]));
     fs.writeFileSync(path.join(pre, 'tribe-midjcard.png'), 'x'); fs.writeFileSync(path.join(pre, 'tribe-midsidea.png'), 'x');
     (async () => {
       const n = await lib.importPrebuilt('micro');
