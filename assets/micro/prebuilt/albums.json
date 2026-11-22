@@ -1,0 +1,1946 @@
+[
+ {
+  "artist": "2814",
+  "title": "Rain Temple",
+  "jcard": "2814-rainjcard.png",
+  "labels": [
+   "2814-rain_sidea.png",
+   "2814-rain_sideb.png"
+  ],
+  "color": "Blue"
+ },
+ {
+  "artist": "2814",
+  "title": "新しい日の誕生",
+  "jcard": "2814-birthjcard.png",
+  "labels": [
+   "2814-birth_sidea.png",
+   "2814-birth_sideb.png"
+  ],
+  "color": "Purple"
+ },
+ {
+  "artist": "A Tribe  Called Quest",
+  "title": "Midnight Marauders",
+  "jcard": "tribe-midjcard.png",
+  "labels": [
+   "tribe-midsidea.png",
+   "tribe-midsideb.png"
+  ],
+  "color": "Yellow"
+ },
+ {
+  "artist": "A Tribe  Called Quest",
+  "title": "The Low End Theory",
+  "jcard": "tribe-lowjcard.png",
+  "labels": [
+   "tribe-lowsidea.png",
+   "tribe-lowsideb.png"
+  ],
+  "color": "Red"
+ },
+ {
+  "artist": "Adema",
+  "title": "Adema",
+  "jcard": "ade-jcard.png",
+  "labels": [
+   "ade-sidea.png",
+   "ade-sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Bad Omens",
+  "title": "The Death Of Peace of Mind",
+  "jcard": "bo-deathjcard.png",
+  "labels": [
+   "bo-deathsidea.png",
+   "bo-deathsideb.png"
+  ],
+  "color": "Red"
+ },
+ {
+  "artist": "Blank Banshee",
+  "title": "1",
+  "jcard": "blank-1jcard.png",
+  "labels": [
+   "blank-1sidea.png",
+   "blank-1sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Blank Banshee",
+  "title": "MEGA",
+  "jcard": "blank-MEGAjcard.png",
+  "labels": [
+   "blank-MEGAsidea.png",
+   "blank-MEGAsideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Blank Banshee",
+  "title": "Gaia",
+  "jcard": "blank-gaiajcard.png",
+  "labels": [
+   "blank-gaiasidea.png",
+   "blank-gaiasideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Blank Banshee",
+  "title": "4D",
+  "jcard": "blank-4djcard.png",
+  "labels": [
+   "blank-4dsidea.png",
+   "blank-4dsideb.png"
+  ],
+  "color": "Purple"
+ },
+ {
+  "artist": "Blank Banshee",
+  "title": "Music For Menus",
+  "jcard": "blank-menujcard.png",
+  "labels": [
+   "blank-menu_sidea.png",
+   "blank-menu_sideb.png"
+  ],
+  "color": "Yellow"
+ },
+ {
+  "artist": "Blink-182",
+  "title": "Blink-182",
+  "jcard": "blink-jcard.png",
+  "labels": [
+   "blink-sidea.png",
+   "blink-sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Blink-182",
+  "title": "Take Off Your Pants and Jacket",
+  "jcard": "blink-takeoffjcard.png",
+  "labels": [
+   "blink-takeoff_sidea.png",
+   "blink-takeoff_sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Boards of Canada",
+  "title": "A Few Old Tunes",
+  "jcard": "boc-old1jcard.png",
+  "labels": [
+   "boc-old1sidea.png",
+   "boc-old1sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Boards of Canada",
+  "title": "A Few Old Tunes Vol. 2",
+  "jcard": "boc-old2jcard.png",
+  "labels": [
+   "boc-old2sidea.png",
+   "boc-old2sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Boards of Canada",
+  "title": "Geogaddi",
+  "jcard": "boc-geojcard.png",
+  "labels": [
+   "boc-geosidea.png",
+   "boc-geosideb.png"
+  ],
+  "color": "Orange"
+ },
+ {
+  "artist": "Boards of Canada",
+  "title": "Music Has a Right to Children",
+  "jcard": "boc-musicjcard.png",
+  "labels": [
+   "boc-musicsidea.png",
+   "boc-musicsideb.png"
+  ],
+  "color": "Green"
+ },
+ {
+  "artist": "Boards of Canada",
+  "title": "Random 35 Tracks",
+  "jcard": "boc-randjcard.png",
+  "labels": [
+   "boc-rand_sidea.png",
+   "boc-rand_sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Boards of Canada",
+  "title": "The Campfire Headphase",
+  "jcard": "boc-campjcard.png",
+  "labels": [
+   "boc-campsidea.png",
+   "boc-campsideb.png"
+  ],
+  "color": "Green"
+ },
+ {
+  "artist": "Boards of Canada",
+  "title": "boc maxima",
+  "jcard": "boc-maxjcard.png",
+  "labels": [
+   "boc-max_sidea.png",
+   "boc-max_sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Bring Me The Horizon",
+  "title": "Amo",
+  "jcard": "bmth-amojcard.png",
+  "labels": [
+   "bmth-amosidea.png",
+   "bmth-amosideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Bring Me The Horizon",
+  "title": "Post Human:Survival Horror",
+  "jcard": "bmth-postjcard.png",
+  "labels": [
+   "bmth-post_sidea.png",
+   "bmth-post_sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Bring Me The Horizon",
+  "title": "That's the Spirit",
+  "jcard": "bmth-spititjcard.png",
+  "labels": [
+   "bmth-spitit_sidea.png",
+   "bmth-spitit_sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Christtt",
+  "title": "A.D.",
+  "jcard": "chr-adjcard.png",
+  "labels": [
+   "chr-ad_sidea.png",
+   "chr-ad_sideb.png"
+  ],
+  "color": "White"
+ },
+ {
+  "artist": "Christtt",
+  "title": "No Lives Matter",
+  "jcard": "chr-nojcard.png",
+  "labels": [
+   "chr-no_sidea.png",
+   "chr-no_sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Chuck Person",
+  "title": "Chuck Person's Eccojams Vol. 1",
+  "jcard": "ecco-jcard.png",
+  "labels": [
+   "ecco-sidea.png",
+   "ecco-sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Cold",
+  "title": "Year Of The Spider",
+  "jcard": "cold-yearjcard.png",
+  "labels": [
+   "cold-year_sidea.png",
+   "cold-year_sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Course Of Empire",
+  "title": "Initiation",
+  "jcard": "coe-inijcard.png",
+  "labels": [
+   "coe-ini_sidea.png",
+   "coe-ini_sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "CRTskies",
+  "title": "Lune De Sang",
+  "jcard": "crt-lunejcard.png",
+  "labels": [
+   "crt-lune_sidea.png",
+   "crt-lune_sideb.png"
+  ],
+  "color": "Red"
+ },
+ {
+  "artist": "Darwin's Waiting Room",
+  "title": "Orphan",
+  "jcard": "dar-jcard.png",
+  "labels": [
+   "dar-sidea.png",
+   "dar-sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Def Leppard",
+  "title": "Hysteria",
+  "jcard": "def-hysjcard.png",
+  "labels": [
+   "def-hys_sidea.png",
+   "def-hys_sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Def Leppard",
+  "title": "Pyromania",
+  "jcard": "def-pyrojcard.png",
+  "labels": [
+   "def-pyro_sidea.png",
+   "def-pyro_sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Evanescence",
+  "title": "Origin",
+  "jcard": "eve-orijcard.png",
+  "labels": [
+   "eve-ori_sidea.png",
+   "eve-ori_sideb.png"
+  ],
+  "color": "Blue"
+ },
+ {
+  "artist": "Eco Virtual",
+  "title": "Atmospheres 1",
+  "jcard": "eco-atmo1jcard.png",
+  "labels": [
+   "eco-atmo1_sidea.png",
+   "eco-atmo1_sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Eco Virtual",
+  "title": "Atmospheres 2",
+  "jcard": "eco-atmo2jcard.png",
+  "labels": [
+   "eco-atmo2_sidea.png",
+   "eco-atmo2_sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Eco Virtual",
+  "title": "Atmospheres 3",
+  "jcard": "eco-atmo3jcard.png",
+  "labels": [
+   "eco-atmo3_sidea.png",
+   "eco-atmo3_sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Eco Virtual",
+  "title": "Atmospheres 4",
+  "jcard": "eco-atmo4jcard.png",
+  "labels": [
+   "eco-atmo4_sidea.png",
+   "eco-atmo4_sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Fastway",
+  "title": "Trick Or Treat Original Motion Picture Soundtrack",
+  "jcard": "fast-trickjcard.png",
+  "labels": [
+   "fast-trick_sidea.png",
+   "fast-trick_sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Fear Factory",
+  "title": "Demanufacture",
+  "jcard": "fear-dmanjcard.png",
+  "labels": [
+   "fear-dman_sidea.png",
+   "fear-dman_sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Fear Factory",
+  "title": "Digimortal",
+  "jcard": "fear-digijcard.png",
+  "labels": [
+   "fear-digi_sidea.png",
+   "fear-digi_sideb.png"
+  ],
+  "color": "Blue"
+ },
+ {
+  "artist": "Fear Factory",
+  "title": "Genexus",
+  "jcard": "fear-genjcard.png",
+  "labels": [
+   "fear-gen_sidea.png",
+   "fear-gen_sideb.png"
+  ],
+  "color": "Silver"
+ },
+ {
+  "artist": "Fear Factory",
+  "title": "Obsolete",
+  "jcard": "fear-obsjcard.png",
+  "labels": [
+   "fear-obs_sidea.png",
+   "fear-obs_sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Fex",
+  "title": "Skyscraper",
+  "jcard": "fex-skyjcard.png",
+  "labels": [
+   "fex-sky_sidea.png",
+   "fex-sky_sideb.png"
+  ],
+  "color": "Yellow"
+ },
+ {
+  "artist": "Finger Eleven",
+  "title": "Tip",
+  "jcard": "fing-tipjcard.png",
+  "labels": [
+   "fing-tip_sidea.png",
+   "fing-tip_sideb.png"
+  ],
+  "color": "Green"
+ },
+ {
+  "artist": "Fort Minor",
+  "title": "Sampler Mixtape",
+  "jcard": "fort-sampjcard.png",
+  "labels": [
+   "fort-sampsidea.png",
+   "fort-sampsideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Fort Minor",
+  "title": "The Rising Tied",
+  "jcard": "fort-tidejcard.png",
+  "labels": [
+   "fort-tide_sidea.png",
+   "fort-tide_sideb.png"
+  ],
+  "color": "Orange"
+ },
+ {
+  "artist": "Fort Minor",
+  "title": "We Major",
+  "jcard": "fort-majorjcard.png",
+  "labels": [
+   "fort-majorsidea.png",
+   "fort-majorsideb.png"
+  ],
+  "color": "Black"
+ },
+ {
+  "artist": "George Clanton",
+  "title": "Ooh Rap I Ya",
+  "jcard": "geo-oohjcard.png",
+  "labels": [
+   "geo-ooh_sidea.png",
+   "geo-ooh_sideb.png"
+  ],
+  "color": "Yellow"
+ },
+ {
+  "artist": "George Clanton",
+  "title": "Slide",
+  "jcard": "geo-slidejcard.png",
+  "labels": [
+   "geo-slide_sidea.png",
+   "geo-slide_sideb.png"
+  ],
+  "color": "Blue"
+ },
+ {
+  "artist": "God Lives Underwater",
+  "title": "Empty",
+  "jcard": "glu-emptyjcard.png",
+  "labels": [
+   "glu-emptysidea.png",
+   "glu-emptysideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "God Lives Underwater",
+  "title": "God Lives Underwater",
+  "jcard": "glu-jcard.png",
+  "labels": [
+   "glu-sidea.png",
+   "glu-sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Gore",
+  "title": "あなたは二度と戻れない",
+  "jcard": "gore-jcard.png",
+  "labels": [
+   "gore-sidea.png",
+   "gore-sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Gravity Kills",
+  "title": "Gravity Kills",
+  "jcard": "gravityk-jcard.png",
+  "labels": [
+   "gravityk-sidea.png",
+   "gravityk-sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Gravity Kills",
+  "title": "Perversion",
+  "jcard": "gravityk-perjcard.png",
+  "labels": [
+   "gravityk-persidea.png",
+   "gravityk-persideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Green Day",
+  "title": "Dookie",
+  "jcard": "green-dookjcard.png",
+  "labels": [
+   "green-dook_sidea.png",
+   "green-dook_sideb.png"
+  ],
+  "color": "Gold"
+ },
+ {
+  "artist": "Hofuku Sochi",
+  "title": "デモ",
+  "jcard": "hofs-2jcard.png",
+  "labels": [
+   "hofs-2sidea.png",
+   "hofs-2sideb.png"
+  ],
+  "color": "Purple"
+ },
+ {
+  "artist": "Hofuku Sochi",
+  "title": "報復措置",
+  "jcard": "hofs-jcard.png",
+  "labels": [
+   "hofs-sidea.png",
+   "hofs-sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Mr. Hoosteen",
+  "title": "Live @ VAPORAISE 2024",
+  "jcard": "hoo-jcard.png",
+  "labels": [
+   "hoo-sidea.png",
+   "hoo-sideb.png"
+  ],
+  "color": "Blue"
+ },
+ {
+  "artist": "Inspiral Carpets",
+  "title": "Revenge Of The Goldfish",
+  "jcard": "insp-goldjcard.png",
+  "labels": [
+   "insp-gold_sidea.png",
+   "insp-gold_sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Jars Of Clay",
+  "title": "Jars Of Clay",
+  "jcard": "jar-jcard.png",
+  "labels": [
+   "jar-sidea.png",
+   "jar-sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Joey Valence & Brae",
+  "title": "HYPERYOUTH",
+  "jcard": "jv&b-hypejcard.png",
+  "labels": [
+   "jv&b-hype_sidea.png",
+   "jv&b-hype_sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Joey Valence & Brae",
+  "title": "HYPERYOUTH (afterparty)",
+  "jcard": "jv&b-hypeajcard.png",
+  "labels": [
+   "jv&b-hypeasidea.png",
+   "jv&b-hypeasideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Joey Valence & Brae",
+  "title": "NO HANDS (Deluxe Edition)",
+  "jcard": "jv&b-nohandsjcard.png",
+  "labels": [
+   "jv&b-nohands_sidea.png",
+   "jv&b-nohands_sideb.png"
+  ],
+  "color": "Blue"
+ },
+ {
+  "artist": "Joey Valence & Brae",
+  "title": "PUNK TACTICS",
+  "jcard": "jv&b-punkjcard.png",
+  "labels": [
+   "jv&b-punk_sidea.png",
+   "jv&b-punk_sideb.png"
+  ],
+  "color": "Black"
+ },
+ {
+  "artist": "Joey Valence & Brae",
+  "title": "The Underground Sound",
+  "jcard": "jv&b-underjcard.png",
+  "labels": [
+   "jv&b-under_sidea.png",
+   "jv&b-under_sideb.png"
+  ],
+  "color": "Pink"
+ },
+ {
+  "artist": "Korn",
+  "title": "Follow the Leader",
+  "jcard": "korn-folljcard.png",
+  "labels": [
+   "korn-foll_sidea.png",
+   "korn-foll_sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Korn",
+  "title": "Issues",
+  "jcard": "korn-issjcard.png",
+  "labels": [
+   "korn-iss_sidea.png",
+   "korn-iss_sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Korn",
+  "title": "Korn",
+  "jcard": "korn-jcard.png",
+  "labels": [
+   "korn-sidea.png",
+   "korn-sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Korn",
+  "title": "Untouchables",
+  "jcard": "korn-unjcard.png",
+  "labels": [
+   "korn-un_sidea.png",
+   "korn-un_sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Kris Kross",
+  "title": "Da Bomb",
+  "jcard": "kk-bombjcard.png",
+  "labels": [
+   "kk-bombsidea.png",
+   "kk-bombsideb.png"
+  ],
+  "color": "Black"
+ },
+ {
+  "artist": "Kris Kross",
+  "title": "Totally Krossed Out",
+  "jcard": "kk-totaljcard.png",
+  "labels": [
+   "kk-totalsidea.png",
+   "kk-totalsideb.png"
+  ],
+  "color": "Yellow"
+ },
+ {
+  "artist": "Laserdisc Visions",
+  "title": "New Dreams Ltd.",
+  "jcard": "laser-newjcard.png",
+  "labels": [
+   "laser-new_sidea.png",
+   "laser-new_sideb.png"
+  ],
+  "color": "Blue"
+ },
+ {
+  "artist": "Led Zeppelin",
+  "title": "IV (Symbols)",
+  "jcard": "led-4jcard.png",
+  "labels": [
+   "led-4_sidea.png",
+   "led-4_sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Lindsheaven Virtual Plaza",
+  "title": "Nordwrong",
+  "jcard": "lind-nordjcard.png",
+  "labels": [
+   "lind-nord_sidea.png",
+   "lind-nord_sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Limp Bizkit",
+  "title": "Significant Other",
+  "jcard": "limp-sigjcard.png",
+  "labels": [
+   "limp-sigsidea.png",
+   "limp-sigsideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Linkin Park",
+  "title": "[Hybrid Theory]",
+  "jcard": "lp-hybjcard.png",
+  "labels": [
+   "lp-hybsidea.png",
+   "lp-hybsideb.png"
+  ],
+  "color": "Red"
+ },
+ {
+  "artist": "Linkin Park",
+  "title": "From Zero",
+  "jcard": "link-fromjcard.png",
+  "labels": [
+   "link-from_sidea.png",
+   "link-from_sideb.png"
+  ],
+  "color": "Pink"
+ },
+ {
+  "artist": "Linkin Park",
+  "title": "Meteora",
+  "jcard": "lp-metjcard.png",
+  "labels": [
+   "lp-metsidea.png",
+   "lp-metsideb.png"
+  ],
+  "color": "Bronze"
+ },
+ {
+  "artist": "Linkin Park",
+  "title": "Minutes to Midnight",
+  "jcard": "lp-minjcard.png",
+  "labels": [
+   "lp-minsidea.png",
+   "lp-minsideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "MACプラス",
+  "title": "フローラルの専門店",
+  "jcard": "mac-fsjcard.png",
+  "labels": [
+   "mac-fs_sidea.png",
+   "mac-fs_sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Man With Roses",
+  "title": "Error Loops",
+  "jcard": "man-errorjcard.png",
+  "labels": [
+   "man-error_sidea.png",
+   "man-error_sideb.png"
+  ],
+  "color": "Blue"
+ },
+ {
+  "artist": "Man With Roses",
+  "title": "Error Loops 2",
+  "jcard": "man-error2jcard.png",
+  "labels": [
+   "man-error2_sidea.png",
+   "man-error2_sideb.png"
+  ],
+  "color": "Red"
+ },
+ {
+  "artist": "Majestic 12",
+  "title": "It Always Ends Like This",
+  "jcard": "meg-endsjcard.png",
+  "labels": [
+   "meg-ends_sidea.png",
+   "meg-ends_sideb.png"
+  ],
+  "color": "White"
+ },
+ {
+  "artist": "Maximum The Hormone",
+  "title": "ぶっ生き返す",
+  "jcard": "maxh-jcard.png",
+  "labels": [
+   "maxh-sidea.png",
+   "maxh-sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Metallica",
+  "title": "…And Justice For All",
+  "jcard": "met-justjcard.png",
+  "labels": [
+   "met-justsidea.png",
+   "met-justsideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Metallica",
+  "title": "Master Of Puppets",
+  "jcard": "met-masjcard.png",
+  "labels": [
+   "met-massidea.png",
+   "met-massideb.png"
+  ],
+  "color": "Red"
+ },
+ {
+  "artist": "Metallica",
+  "title": "Metallica",
+  "jcard": "met-jcard.png",
+  "labels": [
+   "met-sidea.png",
+   "met-sideb.png"
+  ],
+  "color": "Black"
+ },
+ {
+  "artist": "Metallica",
+  "title": "Ride The Lightning",
+  "jcard": "met-ridejcard.png",
+  "labels": [
+   "met-ridesidea.png",
+   "met-ridesideb.png"
+  ],
+  "color": "Blue"
+ },
+ {
+  "artist": "Midnight Oil",
+  "title": "Blue Sky Mining",
+  "jcard": "mid-bluejcard.png",
+  "labels": [
+   "mid-blue_sidea.png",
+   "mid-blue_sideb.png"
+  ],
+  "color": "Blue"
+ },
+ {
+  "artist": "Nine Inch Nails",
+  "title": "[With Teeth]",
+  "jcard": "nin-teethjcard.png",
+  "labels": [
+   "nin-teethsidea.png",
+   "nin-teethsideb.png"
+  ],
+  "color": "Blue"
+ },
+ {
+  "artist": "Nine Inch Nails",
+  "title": "Broken",
+  "jcard": "nin-brojcard.png",
+  "labels": [
+   "nin-brosidea.png",
+   "nin-brosideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Nine Inch Nails",
+  "title": "The Donward Spiral",
+  "jcard": "nin-dowjcard.png",
+  "labels": [
+   "nin-dowsidea.png",
+   "nin-dowsideb.png"
+  ],
+  "color": "Copper"
+ },
+ {
+  "artist": "Nine Inch Nails",
+  "title": "The Fragile",
+  "jcard": "nin-frajcard.png",
+  "labels": [
+   "nin-frasidea.png",
+   "nin-frasideb.png",
+   "nin-frasidec.png",
+   "nin-frasided.png"
+  ],
+  "color": "White"
+ },
+ {
+  "artist": "Nine Inch Nails",
+  "title": "Year Zero",
+  "jcard": "nin-yzjcard.png",
+  "labels": [
+   "nin-yzsidea.png",
+   "nin-yzsideb.png"
+  ],
+  "color": "Blue"
+ },
+ {
+  "artist": "Nirvana",
+  "title": "Nevermind",
+  "jcard": "nirv-neverjcard.png",
+  "labels": [
+   "nirv-never_sidea.png",
+   "nirv-never_sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Nmesh",
+  "title": "Dream Sequins®",
+  "jcard": "nmesh-dreamjcard.png",
+  "labels": [
+   "nmesh-dream_sidea.png",
+   "nmesh-dream_sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Nmesh",
+  "title": "nu.wav hallucinations",
+  "jcard": "nmesh-nuwavjcard.png",
+  "labels": [
+   "nmesh-nuwav_sidea.png",
+   "nmesh-nuwav_sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Nmesh",
+  "title": "Pharma",
+  "jcard": "nmesh-pharmjcard.png",
+  "labels": [
+   "nmesh-pharm_sidea.png",
+   "nmesh-pharm_sideb.png"
+  ],
+  "color": "Red"
+ },
+ {
+  "artist": "NOH9999",
+  "title": "Personal Freedom",
+  "jcard": "noh-persjcard.png",
+  "labels": [
+   "noh-pers_sidea.png",
+   "noh-pers_sideb.png"
+  ],
+  "color": "Red"
+ },
+ {
+  "artist": "Oblivion Dust",
+  "title": "Oblivion Dust",
+  "jcard": "obl-jcard.png",
+  "labels": [
+   "obl-sidea.png",
+   "obl-sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Oliver Tree",
+  "title": "Alone In a Crowd",
+  "jcard": "olv-alowjcard.png",
+  "labels": [
+   "olv-alow_sidea.png",
+   "olv-alow_sideb.png"
+  ],
+  "color": "Pink"
+ },
+ {
+  "artist": "Oliver Tree",
+  "title": "Cowboy Tears",
+  "jcard": "olv-cowjcard.png",
+  "labels": [
+   "olv-cow_sidea.png",
+   "olv-cow_sideb.png"
+  ],
+  "color": "Blue"
+ },
+ {
+  "artist": "Oliver Tree",
+  "title": "Ugly Is Beautiful",
+  "jcard": "olv-uglyjcard.png",
+  "labels": [
+   "olv-ugly_sidea.png",
+   "olv-ugly_sideb.png"
+  ],
+  "color": "Yellow"
+ },
+ {
+  "artist": "Oliver Tree",
+  "title": "Love You Madly Hate You Badly",
+  "jcard": "olv-lovejcard.png",
+  "labels": [
+   "olv-love_sidea.png",
+   "olv-love_sideb.png"
+  ],
+  "color": "Silver"
+ },
+ {
+  "artist": "Ozzy Osbourne",
+  "title": "No More Tears",
+  "jcard": "ozzy-nojcard.png",
+  "labels": [
+   "ozzy-nosidea.png",
+   "ozzy-nosideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Ozzy Osbourne",
+  "title": "Ozzmosis",
+  "jcard": "ozzy-ozjcard.png",
+  "labels": [
+   "ozzy-ozsidea.png",
+   "ozzy-ozsideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Pad Chennington",
+  "title": "Contrast",
+  "jcard": "pad-contjcard.png",
+  "labels": [
+   "pad-cont_sidea.png",
+   "pad-cont_sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Petridisch",
+  "title": "Extrait",
+  "jcard": "peat-extjcard.png",
+  "labels": [
+   "peat-ext_sidea.png",
+   "peat-ext_sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Petridisch",
+  "title": "Tweks",
+  "jcard": "peat-twekjcard.png",
+  "labels": [
+   "peat-twek_sidea.png",
+   "peat-twek_sideb.png"
+  ],
+  "color": "Red"
+ },
+ {
+  "artist": "Pink Floyd",
+  "title": "Dark Side of the Moon",
+  "jcard": "pink-darkjcard.png",
+  "labels": [
+   "pink-darksidea.png",
+   "pink-darksideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Pink Floyd",
+  "title": "Wish You Were Here",
+  "jcard": "pink-wishjcard.png",
+  "labels": [
+   "pink-wishsidea.png",
+   "pink-wishsideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Plumb",
+  "title": "CandyCoatedRaindrops",
+  "jcard": "plumb-ccwjcard.png",
+  "labels": [
+   "plumb-ccwsidea.png",
+   "plumb-ccwsideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Plumb",
+  "title": "Plumb",
+  "jcard": "plumb-jcard.png",
+  "labels": [
+   "plumb-sidea.png",
+   "plumb-sideb.png"
+  ],
+  "color": "Purple"
+ },
+ {
+  "artist": "Pop Will Eat Itself",
+  "title": "Dos Dedos Mis Amigos",
+  "jcard": "pwei-dosjcard.png",
+  "labels": [
+   "pwei-dos_sidea.png",
+   "pwei-dos_sideb.png"
+  ],
+  "color": "Red"
+ },
+ {
+  "artist": "Powerman 5000",
+  "title": "Anyone For Doomsday?",
+  "jcard": "p5k-doomjcard.png",
+  "labels": [
+   "p5k-doomsidea.png",
+   "p5k-doomsideb.png"
+  ],
+  "color": "Green"
+ },
+ {
+  "artist": "Powerman 5000",
+  "title": "Mega!! Kunk Fu Radio",
+  "jcard": "p5k-megajcard.png",
+  "labels": [
+   "p5k-megasidea.png",
+   "p5k-megasideb.png"
+  ],
+  "color": "Yellow"
+ },
+ {
+  "artist": "Powerman 5000",
+  "title": "Tonight the Stars Revolt!",
+  "jcard": "p5k-toujcard.png",
+  "labels": [
+   "p5k-tousidea.png",
+   "p5k-tousideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "PowerPCMe",
+  "title": "K-Mart 1989-1992: The Definitive Edition",
+  "jcard": "powpc-kmarjcard.png",
+  "labels": [
+   "powpc-kmar_sidea.png",
+   "powpc-kmar_sideb.png"
+  ],
+  "color": "Pink"
+ },
+ {
+  "artist": "President",
+  "title": "King of Terrors",
+  "jcard": "pres-kingjcard.png",
+  "labels": [
+   "pres-king_sidea.png",
+   "pres-king_sideb.png"
+  ],
+  "color": "Pink"
+ },
+ {
+  "artist": "Prong",
+  "title": "Rude Awakening",
+  "jcard": "prong-rudejcard.png",
+  "labels": [
+   "prong-rude_sidea.png",
+   "prong-rude_sideb.png"
+  ],
+  "color": "Red"
+ },
+ {
+  "artist": "Pulse Ultra",
+  "title": "Head Space",
+  "jcard": "pulse-headjcard.png",
+  "labels": [
+   "pulse-head_sidea.png",
+   "pulse-head_sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Reggie and the Full Effect",
+  "title": "Last Stop:Crappy Town",
+  "jcard": "reg-lastjcard.png",
+  "labels": [
+   "reg-last_sidea.png",
+   "reg-last_sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Reggie and the Full Effect",
+  "title": "Songs Not to Get Married to",
+  "jcard": "reg-songsjcard.png",
+  "labels": [
+   "reg-songs_sidea.png",
+   "reg-songs_sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Ron Wiseman",
+  "title": "Mighty Morphin' Power Rangers: The Album: A Rock Adventure",
+  "jcard": "ron-mmprjcard.png",
+  "labels": [
+   "ron-mmpr_sidea.png",
+   "ron-mmpr_sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Saint Pepsi",
+  "title": "Hit Vibes",
+  "jcard": "spapsi-hitjcard.png",
+  "labels": [
+   "spapsi-hit_sidea.png",
+   "spapsi-hit_sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Simple Minds",
+  "title": "Once Upon A Time",
+  "jcard": "simp-jcard.png",
+  "labels": [
+   "simp-sidea.png",
+   "simp-sideb.png"
+  ],
+  "color": "Orange"
+ },
+ {
+  "artist": "Sleep Token",
+  "title": "One",
+  "jcard": "sleep-onejcard.png",
+  "labels": [
+   "sleep-one_sidea.png",
+   "sleep-one_sideb.png"
+  ],
+  "color": "Black"
+ },
+ {
+  "artist": "Sleep Token",
+  "title": "Sundowning",
+  "jcard": "sleep-sunjcard.png",
+  "labels": [
+   "sleep-sun_sidea.png",
+   "sleep-sun_sideb.png"
+  ],
+  "color": "Silver"
+ },
+ {
+  "artist": "Sleep Token",
+  "title": "Take Me Back To Eden",
+  "jcard": "sleep_tmbejcard.png",
+  "labels": [
+   "sleep_tmbe_sidea.png",
+   "sleep_tmbe_sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Sleep Token",
+  "title": "This Place Will Become Your Tomb",
+  "jcard": "sleep-tpwbytjcard.png",
+  "labels": [
+   "sleep-tpwbyt_sidea.png",
+   "sleep-tpwbyt_sideb.png"
+  ],
+  "color": "Blue"
+ },
+ {
+  "artist": "Sleep Token",
+  "title": "Two",
+  "jcard": "sleep-twojcard.png",
+  "labels": [
+   "sleep-two_sidea.png",
+   "sleep-two_sideb.png"
+  ],
+  "color": "Gold"
+ },
+ {
+  "artist": "Smash Mouth",
+  "title": "Astro Lounge",
+  "jcard": "sm-astjcard.png",
+  "labels": [
+   "sm-astsidea.png",
+   "sm-astsideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Sneaker Pimps",
+  "title": "Becoming X",
+  "jcard": "sneak-becoxjcard.png",
+  "labels": [
+   "sneak-becox_sidea.png",
+   "sneak-becox_sideb.png"
+  ],
+  "color": "Green"
+ },
+ {
+  "artist": "Spinebelt",
+  "title": "Beautiful Songs For Ugly Children",
+  "jcard": "spine-beautjcard.png",
+  "labels": [
+   "spine-beaut_sidea.png",
+   "spine-beaut_sideb.png"
+  ],
+  "color": "Black"
+ },
+ {
+  "artist": "Spineshank",
+  "title": "Self-Destructive Pattern",
+  "jcard": "spine-selfjcard.png",
+  "labels": [
+   "spine-self_sidea.png",
+   "spine-self_sideb.png"
+  ],
+  "color": "Gold"
+ },
+ {
+  "artist": "Spineshank",
+  "title": "The Hight Of Callousness",
+  "jcard": "spine-caljcard.png",
+  "labels": [
+   "spine-calsidea.png",
+   "spine-calsideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Spiritbox",
+  "title": "Eternal Blue",
+  "jcard": "spir-eterjcard.png",
+  "labels": [
+   "spir-eter_sidea.png",
+   "spir-eter_sideb.png"
+  ],
+  "color": "Blue"
+ },
+ {
+  "artist": "Stabbing Westward",
+  "title": "Darkest Days",
+  "jcard": "stab-darkjcard.png",
+  "labels": [
+   "stab-dark_sidea.png",
+   "stab-dark_sideb.png"
+  ],
+  "color": "Black"
+ },
+ {
+  "artist": "Stabbing Westward",
+  "title": "Ungod",
+  "jcard": "stab-ungodjcard.png",
+  "labels": [
+   "stab-ungod_sidea.png",
+   "stab-ungod_sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Starset",
+  "title": "Divisions",
+  "jcard": "star-divjcard.png",
+  "labels": [
+   "star-div_sidea.png",
+   "star-div_sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Starset",
+  "title": "Transmissions",
+  "jcard": "star-transjcard.png",
+  "labels": [
+   "star-trans_sidea.png",
+   "star-trans_sideb.png"
+  ],
+  "color": "Blue"
+ },
+ {
+  "artist": "Starset",
+  "title": "Vessels",
+  "jcard": "star-vessjcard.png",
+  "labels": [
+   "star-vess_sidea.png",
+   "star-vess_sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Static-X",
+  "title": "Shadow Zone",
+  "jcard": "stat-shadjcard.png",
+  "labels": [
+   "stat-shad_sidea.png",
+   "stat-shad_sideb.png"
+  ],
+  "color": "Green"
+ },
+ {
+  "artist": "Tame Impala",
+  "title": "Currents",
+  "jcard": "tame-curjcard.png",
+  "labels": [
+   "tame-cur_sidea.png",
+   "tame-cur_sideb.png"
+  ],
+  "color": "Purple"
+ },
+ {
+  "artist": "Tears For Fears",
+  "title": "Songs From The Big Chair",
+  "jcard": "tff-songsjcard.png",
+  "labels": [
+   "tff-songssidea.png",
+   "tff-songssideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Tetrarch",
+  "title": "The Ugly Side Of Me",
+  "jcard": "tet-uglyjcard.png",
+  "labels": [
+   "tet-ugly_sidea.png",
+   "tet-ugly_sideb.png"
+  ],
+  "color": "Blue"
+ },
+ {
+  "artist": "Tetrarch",
+  "title": "Unstable",
+  "jcard": "tet-unstjcard.png",
+  "labels": [
+   "tet-unst_sidea.png",
+   "tet-unst_sideb.png"
+  ],
+  "color": "Red"
+ },
+ {
+  "artist": "The Birthday Massacre",
+  "title": "Pins and Needles",
+  "jcard": "birth-pinsjcard.png",
+  "labels": [
+   "birth-pins_sidea.png",
+   "birth-pins_sideb.png"
+  ],
+  "color": "Purple"
+ },
+ {
+  "artist": "The Birthday Massacre",
+  "title": "Walking With Strangers",
+  "jcard": "birth-strangjcard.png",
+  "labels": [
+   "birth-strangsidea.png",
+   "birth-strangsideb.png"
+  ],
+  "color": "Purple"
+ },
+ {
+  "artist": "The Chemical Brothers",
+  "title": "Exit Planet Dust",
+  "jcard": "chem-exitjcard.png",
+  "labels": [
+   "chem-exit_sidea.png",
+   "chem-exit_sideb.png"
+  ],
+  "color": "Orange"
+ },
+ {
+  "artist": "The Mad Capsule Markets",
+  "title": "OSC-DIS",
+  "jcard": "mad-jcard.png",
+  "labels": [
+   "mad-sidea.png",
+   "mad-sideb.png"
+  ],
+  "color": "Red"
+ },
+ {
+  "artist": "The Prodigy",
+  "title": "Invaders Must Die",
+  "jcard": "pro-invjcard.png",
+  "labels": [
+   "pro-inv_sidea.png",
+   "pro-inv_sideb.png"
+  ],
+  "color": "Orange"
+ },
+ {
+  "artist": "The Prodigy",
+  "title": "No Tourists",
+  "jcard": "pro-tourjcard.png",
+  "labels": [
+   "pro-tour_sidea.png",
+   "pro-tour_sideb.png"
+  ],
+  "color": "Purple"
+ },
+ {
+  "artist": "The Prodigy",
+  "title": "The Day Is My Enemy",
+  "jcard": "pro-dayjcard.png",
+  "labels": [
+   "pro-day_sidea.png",
+   "pro-day_sideb.png"
+  ],
+  "color": "Yellow"
+ },
+ {
+  "artist": "The Prodigy",
+  "title": "The Fat of the Land",
+  "jcard": "pro-fatjcard.png",
+  "labels": [
+   "pro-fat_sidea.png",
+   "pro-fat_sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Twiztid",
+  "title": "The Continuous Evilution of Life's ?'s",
+  "jcard": "twiz-questjcard.png",
+  "labels": [
+   "twiz-quest_sidea.png",
+   "twiz-quest_sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Type O Negative",
+  "title": "October Rust",
+  "jcard": "typeo-octjcard.png",
+  "labels": [
+   "typeo-octsidea.png",
+   "typeo-octsideb.png"
+  ],
+  "color": "Green"
+ },
+ {
+  "artist": "undersaken",
+  "title": "Swords of Fate",
+  "jcard": "under-swojcard.png",
+  "labels": [
+   "under-swo_sidea.png",
+   "under-swo_sideb.png"
+  ],
+  "color": "White"
+ },
+ {
+  "artist": "Undersaken X Majestic 12",
+  "title": "Ad Astra",
+  "jcard": "unmaj-adjcard.png",
+  "labels": [
+   "unmaj-ad_sidea.png",
+   "unmaj-ad_sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Vanilla Ice",
+  "title": "Hard to Swallow",
+  "jcard": "vice-hardjcard.png",
+  "labels": [
+   "vice-hard_sidea.png",
+   "vice-hard_sideb.png"
+  ],
+  "color": "Black"
+ },
+ {
+  "artist": "Various",
+  "title": "DREAM_BEATS_COLLECTION",
+  "jcard": "var-dreambjcard.png",
+  "labels": [
+   "var-dreamb_sidea.png",
+   "var-dreamb_sideb.png"
+  ],
+  "color": "White"
+ },
+ {
+  "artist": "Various",
+  "title": "Mortal Kombat Anninilation Original Motion Picture Soundtrack",
+  "jcard": "var-mk2jcard.png",
+  "labels": [
+   "var-mk2_sidea.png",
+   "var-mk2_sideb.png"
+  ],
+  "color": "Black"
+ },
+ {
+  "artist": "Various",
+  "title": "Mortal Kombat Original Motion Picture Soundtrack",
+  "jcard": "var-mk1jcard.png",
+  "labels": [
+   "var-mk1_sidea.png",
+   "var-mk1_sideb.png"
+  ],
+  "color": "Black"
+ },
+ {
+  "artist": "Various",
+  "title": "Music From The Motion Picture The Matrix",
+  "jcard": "var-matrjcard.png",
+  "labels": [
+   "var-matr_sidea.png",
+   "var-matr_sideb.png"
+  ],
+  "color": "Green"
+ },
+ {
+  "artist": "Various",
+  "title": "Nobody Here: Eccos of the Past",
+  "jcard": "var-nheccojcard.png",
+  "labels": [
+   "var-nhecco_sidea.png",
+   "var-nhecco_sideb.png"
+  ],
+  "color": "Blue"
+ },
+ {
+  "artist": "Various",
+  "title": "Nobody Here: The Story of Vaporwave",
+  "jcard": "var-nhjcard.png",
+  "labels": [
+   "var-nh_sidea.png",
+   "var-nh_sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Various",
+  "title": "Super Mario Bros. Original Motion Picture Soundtrack",
+  "jcard": "var-smbjcard.png",
+  "labels": [
+   "var-smb_sidea.png",
+   "var-smb_sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Various",
+  "title": "The Prodigy Presents The Dirtchamber Sessions Volume One",
+  "jcard": "pro-dirtjcard.png",
+  "labels": [
+   "pro-dirt_sidea.png",
+   "pro-dirt_sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Various",
+  "title": "Artificial Intelligence",
+  "jcard": "var-ai1jcard.png",
+  "labels": [
+   "var-ai1_sidea.png",
+   "var-ai1_sideb.png"
+  ],
+  "color": "Green"
+ },
+ {
+  "artist": "Various",
+  "title": "Artificial Intelligence II",
+  "jcard": "var-ai2jcard.png",
+  "labels": [
+   "var-ai2_sidea.png",
+   "var-ai2_sideb.png"
+  ],
+  "color": "red"
+ },
+ {
+  "artist": "VAST",
+  "title": "Visual Audio Sensory Theater",
+  "jcard": "vast-jcard.png",
+  "labels": [
+   "vast-sidea.png",
+   "vast-sideb.png"
+  ],
+  "color": "Silver"
+ },
+ {
+  "artist": "Vola",
+  "title": "Witness",
+  "jcard": "vola-witjcard.png",
+  "labels": [
+   "vola-wit_sidea.png",
+   "vola-wit_sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "w u s o 命 & Sangam",
+  "title": "Gaze",
+  "jcard": "wusan-jcard.png",
+  "labels": [
+   "wusan-sidea.png",
+   "wusan-sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "White Zombie",
+  "title": "Astro-Creep 2000",
+  "jcard": "white-astrojcard.png",
+  "labels": [
+   "white-astro_sidea.png",
+   "white-astro_sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Yes",
+  "title": "90125",
+  "jcard": "yes-90125jcard.png",
+  "labels": [
+   "yes-90125_sidea.png",
+   "yes-90125_sideb.png"
+  ],
+  "color": "Silver"
+ },
+ {
+  "artist": "Z-Trip",
+  "title": "Live In LA",
+  "jcard": "ztrip-livejcard.png",
+  "labels": [
+   "ztrip-live_sidea.png",
+   "ztrip-live_sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "スーパーセックス永遠にSUPERSEX420, Tendencies",
+  "title": "Split EP",
+  "jcard": "supt-tendjcard.png",
+  "labels": [
+   "supt-tend_sidea.png",
+   "supt-tend_sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "マクロスMACROSS 82-98",
+  "title": "A Million Miles Away",
+  "jcard": "macr-amiljcard.png",
+  "labels": [
+   "macr-amil_sidea.png",
+   "macr-amil_sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "マクロスMACROSS 82-99",
+  "title": "Sailorwave / Sailorwave II",
+  "jcard": "macr-sailorjcard.png",
+  "labels": [
+   "macr-sailor_sidea.png",
+   "macr-sailor_sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Bastian Void",
+  "title": "Topia",
+  "jcard": "basvoid-topjcard.png",
+  "labels": [
+   "basvoid-topsidea.png",
+   "basvoid-topsideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Various",
+  "title": "Blech",
+  "jcard": "var-blechjcard.png",
+  "labels": [
+   "var-blechsidea.png",
+   "var-blechsideb.png",
+   "var-blechsidec.png",
+   "var-blechsided.png"
+  ],
+  "color": "Yellow"
+ },
+ {
+  "artist": "Various",
+  "title": "Blech II: Blechsdottir",
+  "jcard": "var-blech2jcard.png",
+  "labels": [
+   "var-blech2sidea.png",
+   "var-blech2sideb.png"
+  ],
+  "color": "Pink"
+ },
+ {
+  "artist": "Folclore Impressionista",
+  "title": "Idea of Nature",
+  "jcard": "folcl-ideajcard.png",
+  "labels": [
+   "folcl-idea_sidea.png",
+   "folcl-idea_sideb.png"
+  ],
+  "color": "Gold"
+ },
+ {
+  "artist": "haircuts for men",
+  "title": "大理石のファンタジー",
+  "jcard": "hair-jcard.png",
+  "labels": [
+   "hair-sidea.png",
+   "hair-sideb.png"
+  ],
+  "color": "Green"
+ },
+ {
+  "artist": "Hallmark '87",
+  "title": "A T R I U M",
+  "jcard": "hal-atrjcard.png",
+  "labels": [
+   "hal-atr_sidea.png",
+   "hal-atr_sideb.png"
+  ],
+  "color": "Transparent"
+ },
+ {
+  "artist": "Hello Meteor",
+  "title": "We Lose Time",
+  "jcard": "hello-wejcard.png",
+  "labels": [
+   "hello-we_sidea.png",
+   "hello-we_sideb.png"
+  ],
+  "color": "Blue"
+ },
+ {
+  "artist": "Begotton",
+  "title": "Death Cycle",
+  "jcard": "begot-deathjcard.png",
+  "labels": [
+   "begot-deathsidea.png",
+   "begot-deathsideb.png"
+  ],
+  "color": "red"
+ },
+ {
+  "artist": "Begotton",
+  "title": "dented, chipped, gap-toothed",
+  "jcard": "begot-dentjcard.png",
+  "labels": [
+   "begot-dentsidea.png",
+   "begot-dentsideb.png"
+  ],
+  "color": "Blue"
+ },
+ {
+  "artist": "Begotton",
+  "title": "Forgive And Forget",
+  "jcard": "begot-forgivjcard.png",
+  "labels": [
+   "begot-forgivsidea.png",
+   "begot-forgivsideb.png"
+  ],
+  "color": "Yellow"
+ },
+ {
+  "artist": "Begotton",
+  "title": "Happy Anniversary",
+  "jcard": "begot-happyjcard.png",
+  "labels": [
+   "begot-happysidea.png",
+   "begot-happysideb.png"
+  ],
+  "color": "Orange"
+ },
+ {
+  "artist": "Begotton",
+  "title": "Hushwave",
+  "jcard": "begot-hushjcard.png",
+  "labels": [
+   "begot-hushsidea.png",
+   "begot-hushsideb.png"
+  ],
+  "color": "Blue"
+ },
+ {
+  "artist": "Begotton",
+  "title": "life cycle",
+  "jcard": "begot-lifejcard.png",
+  "labels": [
+   "begot-lifesidea.png",
+   "begot-lifesideb.png"
+  ],
+  "color": "red"
+ },
+ {
+  "artist": "Begotton",
+  "title": "New Aura",
+  "jcard": "begot-aurajcard.png",
+  "labels": [
+   "begot-aurasidea.png",
+   "begot-aurasideb.png"
+  ],
+  "color": "Black"
+ },
+ {
+  "artist": "Begotton",
+  "title": "Phantom Psalms",
+  "jcard": "begot-phantjcard.png",
+  "labels": [
+   "begot-phantsidea.png",
+   "begot-phantsideb.png"
+  ],
+  "color": "Green"
+ }
+]
