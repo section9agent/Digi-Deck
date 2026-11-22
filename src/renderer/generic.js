@@ -112,8 +112,44 @@
     return c;
   }
   const back_ = (album, h) => back(album, h);
+  // DAT J-card, laid out like the reference: back flap (track list, written sideways) | spine (title, recorded) | cover
+  // (picture on top, the title, the songs and DIGITAL AUDIO TAPE below). 959 x 860 units: flap 200, spine 121, cover 638
+  function datJcard(album, frontImg) {
+    const k = 2, W = 959 * k, H = 860 * k, c = S.newCanvas(W, H), x = c.getContext('2d');
+    x.fillStyle = '#fff'; x.fillRect(0, 0, W, H);
+    const title = album.title || album.name || 'Untitled', artist = S.displayArtist ? S.displayArtist(album) : (album.artist || '');
+    const songs = (album.tracks || []).map(t => (t.title || '').toUpperCase()).filter(Boolean).join(' • ') + ((album.tracks || []).length ? ' •' : '');
+    const wrap = (txt, maxW) => { const out = []; let line = ''; for (const w of txt.split(' ')) { const t = line ? line + ' ' + w : w; if (x.measureText(t).width > maxW && line) { out.push(line); line = w; } else line = t; } if (line) out.push(line); return out; };
+    x.fillStyle = '#111'; x.textBaseline = 'top';
+    // back flap: the songs, reading top to bottom
+    x.save(); x.translate(200 * k - 26 * k, 26 * k); x.rotate(Math.PI / 2);
+    x.font = `400 ${26 * k}px Helvetica, Arial, sans-serif`; wrap(songs, 800 * k).slice(0, 5).forEach((l, i) => x.fillText(l, 0, i * 32 * k)); x.restore();
+    // spine: title (bold) at the top, the year at the bottom
+    x.save(); x.translate(357 * k - 30 * k, 26 * k); x.rotate(Math.PI / 2);
+    x.font = `700 ${27 * k}px Helvetica, Arial, sans-serif`;
+    x.fillText(title.toUpperCase().slice(0, 34), 0, 0); if (artist) x.fillText(artist.toUpperCase().slice(0, 34), 0, 32 * k);
+    if (album.year) { x.font = `400 ${24 * k}px Helvetica, Arial, sans-serif`; x.textAlign = 'right'; x.fillText(String(album.year), 808 * k, 18 * k); }
+    x.restore();
+    // cover: picture, then the text block
+    const cx = 321 * k, cw = 638 * k;
+    S.drawCover(x, frontImg || cover(title, artist, 900), cx, 0, cw, 638 * k);
+    x.textAlign = 'center'; x.font = `700 ${30 * k}px Helvetica, Arial, sans-serif`;
+    x.fillText(title.toUpperCase().slice(0, 30), cx + cw / 2, 648 * k); if (artist) x.fillText(artist.toUpperCase().slice(0, 30), cx + cw / 2, 684 * k);
+    x.textAlign = 'left'; x.font = `400 ${22 * k}px Helvetica, Arial, sans-serif`;
+    wrap(songs, cw - 50 * k).slice(0, 2).forEach((l, i) => x.fillText(l, cx + 25 * k, (728 + i * 28) * k));
+    x.textAlign = 'center'; x.font = `400 ${28 * k}px Helvetica, Arial, sans-serif`; x.fillText('DIGITAL AUDIO TAPE', cx + cw / 2, 810 * k);
+    x.textAlign = 'left';
+    // fold lines
+    x.strokeStyle = 'rgba(0,0,0,.12)'; x.lineWidth = k; for (const fx of [200, 321]) { x.beginPath(); x.moveTo(fx * k, 0); x.lineTo(fx * k, H); x.stroke(); }
+    return c;
+  }
 
-  S.generic = { cover, back, label, jcard, spine };
+  S.generic = { cover, back, label, jcard, spine, datJcard };
+  const datCache = new Map();
+  S.datJcard = async album => {
+    if (!album.tracks && album.id) { const k = album.id + ':' + (album.updated || ''); if (!datCache.has(k)) datCache.set(k, window.api.libraryLoad('dat', album.id).catch(() => null)); album = (await datCache.get(k)) || album; }  // shelf rows carry no track list
+    return datJcard(album, album.front ? await S.loadImage(album.front) : null);
+  };
 
   // Resolve the image for a slot, falling back to generated art.
   // slot: front|back|jcard|label_a|label_b ; returns a CanvasImageSource
@@ -122,12 +158,15 @@
       if (!album) return null;
       side = side || (slot.startsWith('label_') ? slot.slice(6).toUpperCase() : 'A');
       const info = { title: album.title || album.name || 'Untitled', artist: album.artist || '', side };
+      if (mode === 'vinyl' && slot === 'front' && album.shaped && album.pic_a && S.shapedSleeve && !album.front) return S.shapedSleeve(album, 600);
+      if (mode === 'vinyl' && (slot === 'front' || slot === 'back') && S.holeCover) { const h = await S.holeCover(album, slot); if (h) return h; }
       if (slot === 'front') return (await S.loadImage(album.front)) || cover(info.title, info.artist);
       if (slot === 'back') return (await S.loadImage(album.back)) || back(album);
       if (slot === 'spine') return (await S.loadImage(album.spine)) || spine(album);
       if (slot === 'jcard') {
         const j = await S.loadImage(album.jcard);
         if (!j && mode === 'micro') return S.microJcard(album);
+        if (!j && mode === 'dat') return S.datJcard(album);
         return j || jcard(album, await S.loadImage(album.front), await S.loadImage(album.back));
       }
       // labels: side B falls back to side A's label when only one was found

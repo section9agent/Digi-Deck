@@ -49,7 +49,7 @@ class Library {
     // keep hand-edited art when force-refreshing
     if (existing) {
       for (const s of ART_SLOTS) base[s] = existing[s];
-      for (const k of ['jcard_adj', 'reel_type', 'reel_full', 'color', 'picture_disc', 'release_type', 'disc_size', 'sides', 'side_minutes']) base[k] = existing[k];
+      for (const k of ['jcard_adj', 'reel_type', 'reel_full', 'color', 'picture_disc', 'release_type', 'disc_size', 'sides', 'side_minutes', 'md_disc', 'md_case', 'small_hole', 'shaped', 'shape_size', 'shape_fit', 'color_mix']) if (existing[k] !== undefined) base[k] = existing[k];
     }
 
     let tracklist = null, release = null, art = { candidates: [] };
@@ -82,6 +82,7 @@ class Library {
     }
 
     // reel to reel: albums with information go on a retail reel (1200 ft, 32 min a side); playlists / unknown albums on the generic 7" reel (1800 ft, 48 min a side)
+    if (mode === 'md') { if (!base.md_disc) base.md_disc = release && scan.kind !== 'set' ? 'retail' : 'standard'; if (!base.md_case) base.md_case = base.md_disc === 'standard' ? 'small' : 'retail'; }
     if (mode === 'reel' && !base.reel_type) { base.reel_type = (scan.kind === 'set' || !release) ? 'generic' : 'retail'; base.side_minutes = base.reel_type === 'retail' ? 32 : 48; }
     { const sd = assignSides(mode, base.tracks, tracklist, base.sides || 0, base.side_minutes || 0); base.tracks.forEach((t, i) => { t.side = sd[i]; }); base.sides = base.sides || sidesCount(sd, mode); }
     base.is_generic = scan.kind === 'set' || !release;
@@ -288,7 +289,7 @@ class Library {
     }
     const art = await this.providers.findArt({ artist: full.meta.artist || artist, title: full.meta.title || title, mbid: full.meta.mbid, rgid: full.rgid, discogsImages: images, mode, format: full.meta.format });
     full.meta.mbid = full.meta.mbid || art.mbid;
-    const sides = mode === 'vinyl' && full.tracklist.length ? sidesCount(full.tracklist.map(t => sideLetter(t.position) || 'A')) : mode === 'cd' ? 1 : 2;
+    const sides = mode === 'vinyl' && full.tracklist.length ? sidesCount(full.tracklist.map(t => sideLetter(t.position) || 'A')) : mode === 'cd' || mode === 'md' || mode === 'dat' ? 1 : 2;
     const picks = this.providers.autoPick(art.candidates, mode, sides);
     return { meta: full.meta, tracklist: full.tracklist, candidates: art.candidates, picks, sides };
   }

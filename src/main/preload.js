@@ -21,6 +21,8 @@ contextBridge.exposeInMainWorld('api', {
   onMenuSettings: cb => ipcRenderer.on('menu:settings', () => cb()),
   pickFolder: () => call('dialog:folder'),
   exportAdjust: () => call('lib:exportAdjust'),
+  backupLibraries: () => call('lib:backup'),
+  restoreLibraries: () => call('lib:restore'),
   libScanStart: force => call('libscan:start', { force }),
   libScanCancel: () => call('libscan:cancel'),
   libScanRunning: () => call('libscan:running'),

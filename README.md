@@ -1,5 +1,3 @@
-> **Version 1.9.3 - build without the pre-made microcassette database.** The installer has no database page and the app never imports one.
-
 # Digi-Deck
 
 A desktop media player (Electron) that plays your music on a vinyl turntable, a CD player, a cassette deck or a microcassette recorder.

@@ -1239,3 +1239,11 @@ Microsoft proprietary Windows font. NOT bundled; used from the system when prese
 
 ## ChowTapeModel (src/renderer/tapemodel-worklet.js)
 The microcassette tape saturation is a JavaScript/AudioWorklet port of the Jiles-Atherton hysteresis processor from ChowTapeModel (https://github.com/jatinchowdhury18/AnalogTapeModel, v2.11.4) by Jatin Chowdhury. Licensed under the **GNU General Public License v3**. Because this derived code is bundled, Digi-Deck as a whole must be distributed under GPLv3 terms, with source code available to recipients. Wow/flutter and the other ChowTape stages are not used.
+
+## ffmpeg-static@5.2.0 (FFmpeg binary)
+https://github.com/eugeneware/ffmpeg-static - https://ffmpeg.org
+Used only to convert Apple Lossless (ALAC) audio to FLAC. The bundled FFmpeg build is licensed under the GNU GPL v3; its source
+is available from https://ffmpeg.org and from the build provider listed in node_modules/ffmpeg-static/README.md.
+
+## DSEG7 font (assets/fonts)
+Copyright (c) 2017, keshikan (https://www.keshikan.net). SIL Open Font License 1.1 - see assets/fonts/DSEG-LICENSE.txt.

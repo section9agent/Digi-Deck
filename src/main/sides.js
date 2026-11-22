@@ -13,7 +13,8 @@ const LETTERS = 'ABCDEFGH';
 // Playing-time limits. Vinyl: 25 min a side (a release can override it); cassette: 90 min a tape = 45 a side; CD: 80 min a disc.
 // microcassette: MC-60 = 60 minutes a tape = 30 a side
 // reel to reel (7" reel, 7.5 ips): generic reel 1800 ft = 48 min a side; retail reel 1200 ft = 32 min a side (side_minutes holds the chosen one)
-const CAPS = { vinyl: 25 * 60, cassette: 45 * 60, micro: 30 * 60, reel: 48 * 60, cd: 80 * 60 };
+const CAPS = { vinyl: 25 * 60, cassette: 45 * 60, micro: 30 * 60, reel: 48 * 60, cd: 80 * 60, md: 80 * 60, dat: 120 * 60 };   // DAT: a DT-120 tape plays 120 minutes, one direction
+const isDisc = m => m === 'cd' || m === 'md' || m === 'dat';   // DAT plays one way, so one letter per tape like a disc            // one 'side' letter per disc (CD, MiniDisc)
 const isTape = m => m === 'cassette' || m === 'micro' || m === 'reel';
 const capFor = (mode, sideMinutes) => ((mode === 'vinyl' || mode === 'reel') && sideMinutes > 0 ? sideMinutes * 60 : CAPS[mode] || CAPS.vinyl);
 const totalOf = tracks => tracks.reduce((a, t) => a + (t.duration || 0), 0);
@@ -48,7 +49,7 @@ function fillSplit(tracks, cap) {
 }
 function capacitySplit(mode, tracks, cap, min = 0) {
   if (isTape(mode) && totalOf(tracks) > cap && !(min > 2)) return fillSplit(tracks, cap);
-  const step = mode === 'cd' ? 1 : 2, floor = mode === 'cd' ? 1 : 2;
+  const step = isDisc(mode) ? 1 : 2, floor = isDisc(mode) ? 1 : 2;
   let n = Math.max(floor, min | 0, Math.ceil(totalOf(tracks) / cap));
   if (step === 2 && n % 2) n++;
   n = Math.min(n, 8);
@@ -67,7 +68,7 @@ function autoSides(tracks, sideMinutes) {
 // number of sides (vinyl / cassette: whole records or tapes, two each) or discs (CD) used by a list of letters
 function sidesCount(letters, mode = 'vinyl') {
   const m = Math.max(0, ...letters.map(l => LETTERS.indexOf(String(l || 'A').toUpperCase())));
-  return mode === 'cd' ? Math.min(8, m + 1) : Math.min(8, Math.ceil((m + 1) / 2) * 2);
+  return isDisc(mode) ? Math.min(8, m + 1) : Math.min(8, Math.ceil((m + 1) / 2) * 2);
 }
 
 // Discogs-style positions: A1, A2, B1 ... (also C/D for double LPs). Returns null if positions aren't lettered.
@@ -101,14 +102,14 @@ function discogsSides(tracks, tracklist, letterOf = sideLetter) {
 }
 
 function assignSides(mode, tracks, tracklist, sides, sideMinutes) {
-  if (mode === 'cd') {
+  if (isDisc(mode)) {
     // multi-disc releases keep their real disc numbers (Discogs positions, or the disc tag of the files)
     const tagged = tracks.map(t => (t.discNo > 0 && t.discNo <= 8 ? LETTERS[t.discNo - 1] : null));
     const real = discogsSides(tracks, tracklist, discLetter) || (tagged.some(l => l && l !== 'A') && tagged.every(Boolean) ? tagged : null);
     if (real && new Set(real).size > 1) return real;
-    return capacitySplit('cd', tracks, capFor('cd'), sides | 0);
+    return capacitySplit(mode, tracks, capFor(mode), sides | 0);
   }
   return discogsSides(tracks, tracklist) || capacitySplit(mode, tracks, capFor(mode, sideMinutes), sides | 0);
 }
 
-module.exports = { norm, albumKey, durationSplit, discogsSides, assignSides, sideLetter, discLetter, autoSides, sidesCount, capacitySplit, capFor, CAPS, LETTERS };
+module.exports = { isDisc, norm, albumKey, durationSplit, discogsSides, assignSides, sideLetter, discLetter, autoSides, sidesCount, capacitySplit, capFor, CAPS, LETTERS };

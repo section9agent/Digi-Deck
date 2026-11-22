@@ -115,7 +115,15 @@ window.S = window.S || {};
     if (type === 'single' && n > (mode === 'vinyl' ? 2 : 6)) type = mode === 'vinyl' && n <= 6 ? 'maxi' : 'album';
     if (type === 'maxi' && n > 6) type = 'album';
     const info = { type, n, total, canSingle: n <= (mode === 'vinyl' ? 2 : 6), canMaxi: n <= 6, can3in: total <= S.CD3_MAX_SECONDS };
-    if (mode === 'vinyl') { info.seven = type === 'single'; info.rpm = type === 'album' ? 100 / 3 : 45; }
+    if (mode === 'vinyl') {
+      info.seven = type === 'single'; info.rpm = type === 'album' ? 100 / 3 : 45; info.inch = info.seven ? 7 : 12;
+      if (a.disc_size === '10' || a.disc_size === '10s') { info.seven = false; info.inch = 10; }       // 10": standard (33⅓ / 45) or shellac (78)
+      if (a.disc_size === '10s') { info.shellac = true; info.rpm = 78; }
+      if (a.shaped) { info.shaped = true; info.seven = false; info.shellac = false; info.inch = 12; if (info.rpm > 50) info.rpm = 45;
+        const sp = S.shapeFit ? S.shapeFit(a).rpm : 0; if (sp) info.rpm = sp; }                      // shaped records can play at any speed
+      info.paper = info.seven || !!info.shellac;                                                       // paper sleeve (7" and 78s) instead of a jacket
+    }
+    if (mode === 'md') { info.disc = a.md_disc || (a.is_generic || !a.front ? 'standard' : 'retail'); info.case = a.md_case || (info.disc === 'standard' ? 'small' : 'retail'); }
     if (mode === 'cd') {
       const ds = a.disc_size || (type === 'single' && S.sideCount(a, 'cd') < 2 ? '3' : '5');
       info.small = ds === '3' && info.can3in && !(a.sides > 1);
@@ -124,7 +132,12 @@ window.S = window.S || {};
   };
   S.describe = (a, mode) => {
     const i = S.releaseInfo(a, mode), nm = { single: 'Single', maxi: 'Maxi single', album: '' }[i.type];
+    if (mode === 'vinyl' && i.shaped) return `${a.shape_size && S.shapeFit && S.shapeFit(a).fit === 'play' ? a.shape_size + '" ' : ''}shaped picture disc · ${i.rpm === 45 ? '45' : i.rpm === 78 ? '78' : '33⅓'} rpm`;
+    if (mode === 'vinyl' && i.shellac) return '10" shellac · 78 rpm';
+    if (mode === 'vinyl' && i.inch === 10) return `10" ${i.type === 'album' ? 'record' : nm.toLowerCase()} · ${i.rpm === 45 ? '45' : '33⅓'} rpm`;
     if (mode === 'vinyl') return i.seven ? '7" · 45 rpm' : i.type === 'maxi' ? '12" maxi single · 45 rpm' : '12" LP · 33⅓ rpm';
+    if (mode === 'dat') return `DAT · ${S.colorOf(S.DAT_COLORS, a.color || 'black').name.toLowerCase()} tape`;
+    if (mode === 'md') return `MiniDisc · ${{ retail: 'retail disc', led: 'printed disc', standard: 'recordable disc' }[i.disc]} · ${i.case === 'small' ? 'slim case' : 'retail case'}`;
     if (mode === 'cd') return `${i.small ? '3"' : '5"'} disc${nm ? ' · CD ' + nm.toLowerCase() : ''}`;
     if (mode === 'reel') return `7" reel to reel · ${S.reelType(a) === 'retail' ? 'retail reel, 1,200 ft' : 'generic reel, 1,800 ft'} · 7½ ips`;
     const tape = mode === 'micro' ? 'Microcassette' : 'Cassette';
@@ -133,7 +146,7 @@ window.S = window.S || {};
   // 7" singles with two songs: one song per side. CD has one side.
   S.normalizeSides = (a, mode) => {
     const info = S.releaseInfo(a, mode);
-    if (mode === 'cd') a.tracks.forEach(t => { if (!/^[A-H]$/.test(t.side || '')) t.side = 'A'; });
+    if (S.isDisc(mode)) a.tracks.forEach(t => { if (!/^[A-H]$/.test(t.side || '')) t.side = 'A'; });
     else if (info.type === 'single' && a.tracks.length <= 2) a.tracks.forEach((t, i) => { t.side = i === 0 ? 'A' : 'B'; });
     return a;
   };
@@ -141,24 +154,44 @@ window.S = window.S || {};
   // vinyl sides: A-H, two per record. album.sides is the stored count (0 = just what the tracks use).
   S.SIDE_LETTERS = 'ABCDEFGH'.split('');
   S.sideCount = (a, mode) => {
-    if (mode === 'cd') return S.unitLetters(a, 'cd').length;
+    if (S.isDisc(mode)) return S.unitLetters(a, mode).length;
     const used = Math.max(0, ...(a.tracks || []).map(t => S.SIDE_LETTERS.indexOf((t.side || 'A').toUpperCase())));
     return Math.min(8, Math.max(2, a.sides | 0, Math.ceil((used + 1) / 2) * 2));
   };
   S.vinylSides = a => S.SIDE_LETTERS.slice(0, S.sideCount(a));
   // which physical record / tape / disc a side letter lives on (CD: every letter is its own disc)
-  S.discOf = (side, mode) => { const i = Math.max(0, S.SIDE_LETTERS.indexOf(side)); return (mode || S.app?.mode) === 'cd' ? i : Math.floor(i / 2); };
+  S.discOf = (side, mode) => { const i = Math.max(0, S.SIDE_LETTERS.indexOf(side)); return S.isDisc(mode || S.app?.mode) ? i : Math.floor(i / 2); };
   S.partnerSide = side => S.SIDE_LETTERS[S.SIDE_LETTERS.indexOf(side) ^ 1];            // the other side of the same record / tape
   // sides (vinyl, cassette) or discs (CD) the release has: what the user chose, or what the tracks use
   S.unitLetters = (a, mode) => {
     const used = Math.max(0, ...(a.tracks || []).map(t => S.SIDE_LETTERS.indexOf((t.side || 'A').toUpperCase())));
-    const n = mode === 'cd' ? Math.min(8, Math.max(1, a.sides | 0, used + 1)) : Math.min(8, Math.max(2, a.sides | 0, Math.ceil((used + 1) / 2) * 2));
+    const n = S.isDisc(mode) ? Math.min(8, Math.max(1, a.sides | 0, used + 1)) : Math.min(8, Math.max(2, a.sides | 0, Math.ceil((used + 1) / 2) * 2));
     return S.SIDE_LETTERS.slice(0, n);
   };
+  // DAT tapes come in two shell colours
+  S.DAT_COLORS = [{ id: 'black', name: 'Black', hex: '#18191b' }, { id: 'blue', name: 'Deep blue', hex: '#14246a' }];
+  S.isDisc = m => m === 'cd' || m === 'md' || m === 'dat';
+  S.unitNoun = m => m === 'dat' ? 'tape' : 'disc';                                                          // what one letter is called                                                                    // one letter per disc, no sides
   S.isTape = m => m === 'cassette' || m === 'micro' || m === 'reel';                                         // the two-sided tape formats (flip + swap tape)
-  S.MAX_SEC = { cd: 80 * 60, cassette: 45 * 60, micro: 30 * 60, reel: 48 * 60 };      // microcassette: MC-60 = 30 min a side                                        // vinyl: 25 min a side unless the album says otherwise
-  S.sideLimit = (a, mode) => (mode === 'vinyl' ? ((a && a.side_minutes) || 25) * 60 : mode === 'reel' ? ((a && a.side_minutes) || 48) * 60 : S.MAX_SEC[mode] || 0);
+  S.MAX_SEC = { dat: 120 * 60, md: 80 * 60, cd: 80 * 60, cassette: 45 * 60, micro: 30 * 60, reel: 48 * 60 };      // microcassette: MC-60 = 30 min a side                                        // vinyl: 25 min a side unless the album says otherwise
+  // a side's default length: 12" 25 min; 10" 15 min at 33⅓, 10 at 45; a 10" shellac 78 about 4 min
+  S.vinylSideMin = a => { if (!a) return 25; const ds = a.disc_size;
+    if (a.shaped && S.shapeFit && S.shapeFit(a).fit === 'play') { const d = parseFloat(a.shape_size) || 7; return S.shapeFit(a).rpm === 78 ? (d <= 8 ? 3 : d <= 10.5 ? 4 : 5) : d <= 8 ? 6 : d <= 10.5 ? 12 : 25; } if (ds === '10s' && !a.shaped) return 4; if (ds === '10' && !a.shaped) return S.releaseInfo(a, 'vinyl').rpm === 45 ? 10 : 15; return 25; };
+  S.sideLimit = (a, mode) => (mode === 'vinyl' ? ((a && a.side_minutes) || S.vinylSideMin(a)) * 60 : mode === 'reel' ? ((a && a.side_minutes) || 48) * 60 : S.MAX_SEC[mode] || 0);
   // reel to reel: which reel the album is on - the user's choice, else a retail reel for albums with information and the generic 7" reel for the rest
   S.reelType = a => (a && a.reel_type) || (a && !a.is_generic ? 'retail' : 'generic');
   S.sidesOf = tracks => [...new Set(tracks.map(t => t.side || 'A'))].sort();
 })(window.S);
+
+// brushed-aluminium texture for the CSS-drawn players (turntable, CD player): mid-grey streaks used with mix-blend-mode:overlay,
+// so 50 % grey leaves the colour alone and the streaks lighten / darken it like brushed metal
+(function () {
+  try {
+    const W = 1024, H = 512, c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d');
+    x.fillStyle = '#808080'; x.fillRect(0, 0, W, H);
+    let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    for (let y = 0; y < H; y += 1) { const v = rnd(); x.fillStyle = v > 0.5 ? `rgba(255,255,255,${(v - 0.5) * 0.22})` : `rgba(0,0,0,${(0.5 - v) * 0.22})`; x.fillRect(0, y, W, 1); }
+    for (let i = 0; i < 1400; i++) { const l = rnd() > 0.5; x.fillStyle = l ? `rgba(255,255,255,${0.06 + rnd() * 0.14})` : `rgba(0,0,0,${0.04 + rnd() * 0.1})`; const X = rnd() * W, Y = Math.floor(rnd() * H), L = 40 + rnd() * 380; x.fillRect(X, Y, L, 1); if (X + L > W) x.fillRect(X - W, Y, L, 1); }
+    document.documentElement.style.setProperty('--brush', `url(${c.toDataURL('image/png')})`);
+  } catch (e) {}
+})();

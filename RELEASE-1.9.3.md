@@ -1,6 +1,5 @@
 # Digi-Deck 1.9.3
 
-> **This build does not include the pre-made microcassette database.** The installer has no database page and the app never imports one. Your own library is not touched.
 
 ## Highlights
 

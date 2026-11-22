@@ -9,7 +9,7 @@ const { DatabaseSync } = require('node:sqlite');
 class DB {
   constructor(file) {
     this.raw = new DatabaseSync(file);
-    this.raw.exec('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
+    this.raw.exec('PRAGMA busy_timeout = 4000; PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');      // wait (briefly) for a lock instead of failing at once
   }
   exec(sql) { return this.raw.exec(sql); }
   prepare(sql) { return this.raw.prepare(sql); }
@@ -22,7 +22,7 @@ class DB {
   }
 }
 
-const MODES = ['vinyl', 'cd', 'cassette', 'micro', 'reel'];
+const MODES = ['vinyl', 'cd', 'cassette', 'micro', 'reel', 'md', 'dat'];
 // vinyl: one label (and, for picture discs, one full-disc image) per side, A-H = up to four records
 const SIDE_KEYS = 'abcdefgh'.split('');
 const ART_SLOTS = ['front', 'back', 'jcard', 'spine', ...SIDE_KEYS.map(k => 'label_' + k), ...SIDE_KEYS.map(k => 'pic_' + k)];
@@ -37,7 +37,14 @@ const EXTRA_COLUMNS = {
   release_type: "TEXT DEFAULT ''", disc_size: "TEXT DEFAULT ''",
   spine: "TEXT DEFAULT ''",                        // reel to reel: the box spine
   reel_full: "TEXT DEFAULT ''",                     // reel to reel: '1' when the label picture covers the whole reel face
-  reel_type: "TEXT DEFAULT ''",                    // reel to reel: 'generic' (7" plastic reel, 48 min a side) or 'retail' (1200 ft, 32 min a side)
+  reel_type: "TEXT DEFAULT ''",
+  small_hole: "TEXT DEFAULT ''",
+  shaped: "TEXT DEFAULT ''",                       // vinyl: '1' = shaped picture disc (the side A / B pictures are PNGs whose outline is the record)
+  shape_size: "TEXT DEFAULT ''",
+  shape_fit: "TEXT DEFAULT ''",
+  color_mix: "TEXT DEFAULT ''",                    // vinyl: multi-colour record, JSON {style, colors, seed}                    // shaped record: JSON {fit: 'play' | 'whole', dx, dy, k} - what the size measures, and the groove circle's adjustment                   // shaped record: its widest dimension in inches                   // vinyl 7": '1' = small (LP-size) centre hole, no 45 adapter
+  md_disc: "TEXT DEFAULT ''",                      // MiniDisc: 'retail' | 'led' (printed all over) | 'standard' (recordable with a sticker)
+  md_case: "TEXT DEFAULT ''",                      // MiniDisc: 'retail' (tall case with tray card) | 'small' (slim case with J-card)                    // reel to reel: 'generic' (7" plastic reel, 48 min a side) or 'retail' (1200 ft, 32 min a side)
   jcard_adj: "TEXT DEFAULT ''",                   // J-card: {z,ox,oy} pan/zoom used for the shelf spine + cover (the stored image itself stays whole)
   side_minutes: 'INTEGER DEFAULT 0',            // vinyl: playing-time limit per side in minutes (0 = default 25)
   sides: 'INTEGER DEFAULT 0',                       // vinyl / cassette: number of sides (2 = one record or tape, 4 = double ...); CD: number of discs; 0 = from the tracks
@@ -97,7 +104,7 @@ class Store {
   }
   list(mode) {
     return this.db(mode).prepare(
-      `SELECT a.id,a.key,a.kind,a.artist,a.title,a.year,a.front,a.back,a.jcard,a.spine,a.reel_type,a.reel_full,a.jcard_adj,a.is_generic,a.last_played,a.release_type,a.disc_size,a.sides,
+      `SELECT a.id,a.key,a.kind,a.artist,a.title,a.year,a.front,a.back,a.jcard,a.spine,a.reel_type,a.reel_full,a.md_disc,a.md_case,a.small_hole,a.shaped,a.shape_size,a.shape_fit,a.pic_a,a.pic_b,a.picture_disc,a.color_mix,a.jcard_adj,a.is_generic,a.last_played,a.release_type,a.disc_size,a.sides,
               (SELECT COUNT(*) FROM tracks t WHERE t.album_id=a.id) AS track_count,
               (SELECT COALESCE(SUM(t.duration),0) FROM tracks t WHERE t.album_id=a.id) AS total_sec
        FROM albums a ORDER BY lower(a.artist), lower(a.title)`).all();
@@ -105,9 +112,11 @@ class Store {
   save(mode, album) {
     const db = this.db(mode);
     const now = Date.now();
-    const f = ['kind', 'artist', 'title', 'year', 'label', 'catno', 'discogs_id', 'mbid', 'front', 'back', 'jcard', 'spine', 'reel_type', 'reel_full', 'jcard_adj', 'source_path', 'color', 'release_type', 'disc_size', ...SIDE_KEYS.map(k => 'label_' + k), ...SIDE_KEYS.map(k => 'pic_' + k)];
+    const f = ['kind', 'artist', 'title', 'year', 'label', 'catno', 'discogs_id', 'mbid', 'front', 'back', 'jcard', 'spine', 'reel_type', 'reel_full', 'md_disc', 'md_case', 'small_hole', 'shaped', 'shape_size', 'shape_fit', 'color_mix', 'jcard_adj', 'source_path', 'color', 'release_type', 'disc_size', ...SIDE_KEYS.map(k => 'label_' + k), ...SIDE_KEYS.map(k => 'pic_' + k)];
     const tx = db.transaction(() => {
       let id = album.id;
+      // an album opened from files (no id yet) that is already in the library under the same key: update that entry
+      if (!id && album.key) { const hit = db.prepare('SELECT id FROM albums WHERE key=?').get(album.key); if (hit) id = album.id = Number(hit.id); }
       if (id) {
         db.prepare(`UPDATE albums SET ${f.map(x => x + '=@' + x).join(',')}, sides=@sides, side_minutes=@side_minutes, is_generic=@is_generic, picture_disc=@picture_disc, updated=@updated WHERE id=@id`)
           .run({ ...Object.fromEntries(f.map(x => [x, album[x] ?? ''])), sides: album.sides | 0, side_minutes: album.side_minutes | 0, is_generic: album.is_generic ? 1 : 0, picture_disc: album.picture_disc ? 1 : 0, updated: now, id });

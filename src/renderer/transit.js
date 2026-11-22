@@ -47,26 +47,64 @@
         slab('spine', seven ? `left:0;top:100%;width:100%;height:${th}px;margin-top:${-th / 2}px;transform:rotateX(-90deg)` : `left:0;top:0;height:100%;width:${th}px;margin-left:${-th / 2}px;transform:rotateY(-90deg)`),
         ...(seven ? [] : [slab('', `left:0;top:0;width:100%;height:${th}px;margin-top:${-th / 2}px;transform:rotateX(90deg)`), slab('', `left:0;top:100%;width:100%;height:${th}px;margin-top:${-th / 2}px;transform:rotateX(-90deg)`)])];
       const rec = el('div', { class: 'tr-rec' }); rec.append(recCanvas);
+      // die-cut jacket (a see-through hole in the front / back picture): the record shows through, and its other side shows
+      // through the back. The inside of the jacket is drawn behind each face so the hole never shows straight through
+      const inner = [];
+      for (const [face2, which, z] of [[front, 'front', -th / 2 + 0.6], [back, 'back', th / 2 - 0.6]]) {
+        if (!album[which]) continue;
+        S.isHoled(album[which]).then(h => { if (!h) return; face2.classList.add('holed');
+          const d = el('div', { class: 'tr-jinner' }); d.style.transform = `translateZ(${z}px)` + (which === 'back' ? ' rotateY(180deg)' : ''); j.insertBefore(d, which === 'front' ? back.nextSibling : front);
+          if (which === 'back') { const sides = S.sidesOf(album.tracks || []); S.vinylFace(album, sides[1] || 'B').then(cv => { cv.classList.add('tr-recback'); rec.append(cv); }); }
+        });
+      }
       const j = el('div', { class: 'tr-jacket' + (seven ? ' seven' : '') }, back, rec, ...edges, front);
+      j.style.width = j.style.height = size + 'px';
+      return { j, rec, front, th };
+    },
+    // ---- shaped records: a clear PVC sleeve the size of the record (with a fold-over flap at the back). Without cover art the record
+    // shows through it; with cover art the card sits at the front, under the PVC, and the record slides out from behind it.
+    shapedCrop(cv) {                                    // the record's own square inside its 12" frame canvas
+      const W = cv.width, k = 160 / W, sm = S.newCanvas(160, 160), x = sm.getContext('2d'); x.drawImage(cv, 0, 0, 160, 160);
+      const a = x.getImageData(0, 0, 160, 160).data; let x0 = 160, y0 = 160, x1 = 0, y1 = 0;
+      for (let i = 0; i < 160 * 160; i++) if (a[i * 4 + 3] > 40) { const X = i % 160, Y = (i / 160) | 0; if (X < x0) x0 = X; if (X > x1) x1 = X; if (Y < y0) y0 = Y; if (Y > y1) y1 = Y; }
+      if (x1 <= x0) return { crop: cv, x0: 0, y0: 0, cs: W, W };
+      const cs = Math.min(W, Math.round((Math.max(x1 - x0, y1 - y0) + 3) / k)), cx = (x0 + x1 + 1) / 2 / k, cy = (y0 + y1 + 1) / 2 / k;
+      const X0 = Math.round(cx - cs / 2), Y0 = Math.round(cy - cs / 2), c = S.newCanvas(cs, cs); c.getContext('2d').drawImage(cv, -X0, -Y0);
+      return { crop: c, x0: X0, y0: Y0, cs, W };
+    },
+    // the full 12"-frame rectangle that puts the cropped record at r
+    shapedFull(sc, r) { const k = r.width / sc.cs; return { left: r.left - sc.x0 * k, top: r.top - sc.y0 * k, width: sc.W * k, height: sc.W * k }; },
+    pvc(album, recCanvas, size) {
+      const th = 2;
+      const sheet = cls => el('div', { class: 'tr-pvc ' + cls });
+      const back = sheet('back'), front = sheet('front'), flap = sheet('flap');
+      back.style.transform = `translateZ(${-th / 2}px)`; flap.style.transform = `translateZ(${-th / 2 + 0.3}px)`; front.style.transform = `translateZ(${th / 2}px)`;
+      const rec = el('div', { class: 'tr-rec shaped' }); rec.append(recCanvas);
+      const layers = [back, flap, rec];
+      if (album.front) { const card = el('div', { class: 'tr-pvccard' }); card.style.backgroundImage = `url("${S.fileUrl(album.front)}")`; card.style.transform = `translateZ(${th / 2 - 0.4}px)`; layers.push(card); }
+      const j = el('div', { class: 'tr-jacket pvcj' }, ...layers, front);
       j.style.width = j.style.height = size + 'px';
       return { j, rec, front, th };
     },
     copyOf(cv) { const c = S.newCanvas(cv.width, cv.height); c.getContext('2d').drawImage(cv, 0, 0); return c; },
     place(node, r) { Object.assign(node.style, { left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px' }); },
+    // on-screen size of the jacket / sleeve: a 12" fills most of the height, a 10" is 10/12 of that, a 7" sleeve its own size
+    sleeveSize(vi, vw, vh) { if (vi.seven) return Math.min(vh * 0.42, vw * 0.3); const s12 = Math.min(vh * 0.62, vw * 0.4); return vi.inch === 10 ? s12 * 10 / 12 : s12; },
     tilt: seven => seven ? 'rotateX(16deg) rotateY(-8deg)' : 'rotateY(-22deg) rotateX(5deg)',
 
     // ---- vinyl: out of the jacket and onto the turntable -------------------------------------------------------------------
     // from: rectangle of the cover in the library preview; load(): puts the album on the player (no autoplay) and resolves when it is ready
     async vinylOut(album, from, load) {
-      const run = T.begin(0.6), seven = S.releaseInfo(album, 'vinyl').seven;     // about 5 s
+      const run = T.begin(0.6), vi = S.releaseInfo(album, 'vinyl'), seven = vi.paper;     // about 5 s; "seven" = paper sleeve (7" and 78s)
       try {
         const side = (S.sidesOf(album.tracks)[0]) || 'A';
         const recCv = await S.vinylFace(album, side);
-        const vw = innerWidth, vh = innerHeight, size = Math.min(vh * (seven ? 0.42 : 0.62), vw * (seven ? 0.3 : 0.4));
-        const { j, rec } = T.jacket(album, seven, recCv, size);
+        const vw = innerWidth, vh = innerHeight, sc = vi.shaped ? T.shapedCrop(recCv) : null;
+        const size = sc ? T.sleeveSize(vi, vw, vh) * sc.cs / sc.W * 1.12 : T.sleeveSize(vi, vw, vh);
+        const { j, rec } = sc ? T.pvc(album, sc.crop, size) : T.jacket(album, seven, recCv, size);
         const holder = el('div', { class: 'tr-holder' }); holder.append(j); run.ov.append(holder);
         // where the jacket rests while the record comes out: left of centre for a 12", low for a 7"
-        const cx = seven ? vw / 2 : vw / 2 - size * 0.42, cy = seven ? vh / 2 + size * 0.5 : vh / 2;
+        const cx = seven ? vw / 2 : vw / 2 - size * 0.42, cy = seven ? Math.min(vh / 2 + size * 0.5, vh - size * 0.47) : vh / 2;
         const fx = from.left + from.width / 2, fy = from.top + from.height / 2, s0 = Math.max(from.width, from.height) / size;
         const at = (x, y, s, rot) => `translate(${x - size / 2}px,${y - size / 2}px) scale(${s}) ${rot}`;
         const tilt = T.tilt(seven);
@@ -78,7 +116,9 @@
         await run.anim(rec, [{ transform: 'none' }, { transform: out }], 2300, 'cubic-bezier(.5,0,.3,1)');
         await run.wait(250);
         // free the record from the jacket's space, so the two can part
-        const rr = rec.getBoundingClientRect(), free = el('div', { class: 'tr-free' }); free.append(T.copyOf(recCv)); T.place(free, rr); run.ov.append(free); rec.style.visibility = 'hidden';
+        let rr = rec.getBoundingClientRect(); const free = el('div', { class: 'tr-free' + (sc ? ' shaped' : '') }); free.append(T.copyOf(recCv));
+        if (sc) { const q = rr.width / sc.cs * sc.W; rr = T.shapedFull(sc, rr); rr = { left: rr.left, top: rr.top, width: q, height: q }; }
+        T.place(free, rr); run.ov.append(free); rec.style.visibility = 'hidden';
         const rs = Math.min(rr.width, rr.height), up = { left: vw / 2 - rs / 2, top: Math.max(12, vh * 0.1), width: rs, height: rs };
         const loaded = load();
         run.anim(holder, [{ transform: at(cx, cy, 1, tilt), opacity: 1 }, { transform: at(cx - (seven ? 0 : vw * 0.12), cy + vh * 0.25, 0.86, tilt), opacity: 0 }], 1300, 'cubic-bezier(.5,0,.6,1)');
@@ -101,14 +141,15 @@
     // ---- vinyl: off the turntable, back in the jacket, and away toward the Library button ------------------------------------
     async vinylBack(album) {
       const stage = S.app.stage, target = stage && stage.recordRect && stage.recordRect(); if (!target) return;
-      const run = T.begin(0.54), seven = S.releaseInfo(album, 'vinyl').seven;     // about 4 s
+      const run = T.begin(0.54), vi = S.releaseInfo(album, 'vinyl'), seven = vi.paper;     // about 4 s
       try {
         const src = stage.recordCanvas(), recCv = T.copyOf(src);
-        const vw = innerWidth, vh = innerHeight, size = Math.min(vh * (seven ? 0.42 : 0.62), vw * (seven ? 0.3 : 0.4));
-        const free = el('div', { class: 'tr-free' }); free.append(T.copyOf(src)); T.place(free, target); run.ov.append(free); stage.hideRecord(true);
-        const { j, rec } = T.jacket(album, seven, recCv, size); rec.style.visibility = 'hidden';
+        const vw = innerWidth, vh = innerHeight, sc = vi.shaped ? T.shapedCrop(recCv) : null;
+        const size = sc ? T.sleeveSize(vi, vw, vh) * sc.cs / sc.W * 1.12 : T.sleeveSize(vi, vw, vh);
+        const free = el('div', { class: 'tr-free' + (sc ? ' shaped' : '') }); free.append(T.copyOf(src)); T.place(free, target); run.ov.append(free); stage.hideRecord(true);
+        const { j, rec } = sc ? T.pvc(album, sc.crop, size) : T.jacket(album, seven, recCv, size); rec.style.visibility = 'hidden';
         const holder = el('div', { class: 'tr-holder' }); holder.append(j); holder.style.opacity = 0; run.ov.append(holder, free);
-        const cx = seven ? vw / 2 : vw / 2 - size * 0.42, cy = seven ? vh / 2 + size * 0.5 : vh / 2, tilt = T.tilt(seven);
+        const cx = seven ? vw / 2 : vw / 2 - size * 0.42, cy = seven ? Math.min(vh / 2 + size * 0.5, vh - size * 0.47) : vh / 2, tilt = T.tilt(seven);
         const at = (x, y, s, rot) => `translate(${x - size / 2}px,${y - size / 2}px) scale(${s}) ${rot}`;
         const px = r => ({ left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px' });
         // the record lifts off the platter
@@ -118,7 +159,8 @@
         // the jacket comes down from the top while the record moves to where it will slide in
         const out = seven ? 'translateY(-104%)' : 'translateX(104%)';
         rec.style.transform = out; holder.style.transform = at(cx, cy, 1, tilt);
-        const slot = rec.getBoundingClientRect();                                  // where the pulled-out record sits, on screen
+        let slot = rec.getBoundingClientRect();                                    // where the pulled-out record sits, on screen
+        if (sc) slot = T.shapedFull(sc, slot);
         run.anim(holder, [{ transform: at(cx, -size, 0.8, tilt), opacity: 0 }, { transform: at(cx, cy, 1, tilt), opacity: 1 }], 1500);
         await run.anim(free, [px(lift), px(slot)], 1500);
         rec.style.visibility = ''; free.remove();
@@ -303,7 +345,10 @@
     // case / tape sizes in mm (case modelled lying on its side: W = long side). Microcassette: case 2 3/16 x 1 1/2 x 1/2 in, tape 2 x 1 5/16 x 5/16 in
     SPEC: {
       cassette: { W: 109, H: 70, D: 17, dd: 12.5, tw: 100.4, ar: 1600 / 1020, tt: 12, face: (a, s) => S.cassetteFace(a, s), edge: a => S.cassetteEdge(a) },
-      micro: { W: 55.6, H: 38.1, D: 12.7, dd: 9, tw: 50.8, ar: 1461 / 959, tt: 7.9, noEdges: true, face: (a, s) => S.microFace(a, s), edge: a => S.microEdge(a) }
+      md: { W: 79.4, H: 71.4, D: 7.9, dd: 5.6, tw: 71.4, ar: 71.4 / 68.3, tt: 4.8, turned: true, face: (a, s, w, h, back) => T.mdFace(a, s, w, h, back), edge: a => T.mdEdge(a) },
+      micro: { W: 55.6, H: 38.1, D: 12.7, dd: 9, tw: 50.8, ar: 1461 / 959, tt: 7.9, noEdges: true, face: (a, s) => S.microFace(a, s), edge: a => S.microEdge(a) },
+      // DAT: a small clamshell case about 81 x 60 x 14 mm (portrait J-card cover 638 x 860), tape 73 x 54 x 10.5 mm
+      dat: { W: 81, H: 60, D: 14, dd: 11.5, tw: 73, ar: 73 / 54, tt: 10.5, turned: true, face: (a, s) => S.datTapeFace(a, s), edge: a => S.colorOf(S.DAT_COLORS, (a && a.color) || 'black').hex }
     },
     spec() { return T.SPEC[S.app.mode] || T.SPEC.cassette; },
     async tapeCase(album, Hc, small) {
@@ -330,7 +375,7 @@
       const body = el('div', { class: 'tr-tbody' }, jside, inner, wall('l', -D / 2, D - dd, 'clear'), wall('r', -D / 2, D - dd, 'clear'), wall('t', -D / 2, D - dd, 'clear'), spineWall);
       // the pocket that tips out, holding the cassette
       const tape = el('div', { class: 'tr-ctape' }), faceA = el('div', { class: 'tr-cside a' }), faceB = el('div', { class: 'tr-cside b' });
-      faceA.append(await P.face(album, side)); faceB.append(await P.face(album, other));
+      faceA.append(await P.face(album, side, cw, ch, false)); faceB.append(await P.face(album, P.turned ? side : other, cw, ch, P.turned));
       const edge = P.edge(album), te = k => { const w = wall(k, -ct / 2, ct, 'tape', cw, ch); w.style.background = edge; return w; };
       // (the microcassette shell has rounded corners and notches, so square edge walls would show as a box around it - it gets none, like in the deck)
       tape.append(faceB, ...(P.noEdges ? [] : [te('l'), te('r'), te('t'), te('b')]), faceA);
@@ -538,10 +583,216 @@
         if (lb) lb.animate([{ filter: 'brightness(1)' }, { filter: 'brightness(1.8)' }, { filter: 'brightness(1)' }], { duration: 500 });
       } finally { run.end(); }
     },
+    // ---- MiniDisc ----------------------------------------------------------------------------------------------------------------
+    // the disc is a live element (shell, slider, inner disc); 2 13/16 x 2 11/16 x 3/16 in
+    MDW: 71.4, MDH: 68.3, MDT: 4.8,
+    mdEdge(a) { const d = S.releaseInfo(a, 'md').disc; return d === 'standard' ? '#cfd8e0aa' : d === 'led' ? '#2a2c30' : '#151618'; },
+    async mdDisc(album, side, back) { return (await S.mdBuildDisc(album, side || S.sidesOf(album.tracks)[0] || 'A', back)).el; },
+    // a disc lying a quarter turn round (as it sits in a slim case that is on its side): w x h is the turned box
+    async mdFace(album, side, w, h, back) {
+      const box = el('div', { class: 'tr-mdface' }), d = await T.mdDisc(album, side, back);
+      Object.assign(d.style, { position: 'absolute', inset: 0, transform: back ? 'none' : 'rotate(180deg)' });     // upside down in the case
+      box.append(d); return box;
+    },
+    // a free disc on screen; turned: starts a quarter turn round (out of a slim case)
+    async mdFree(album, side, rect, turned) {
+      const f = el('div', { class: 'tr-free md' }), d = await T.mdDisc(album, side);
+      Object.assign(d.style, { position: 'absolute', inset: 0, transform: turned ? 'rotate(180deg)' : 'none' }); f._turned = !!turned;
+      f.append(d); f._d = d; T.place(f, rect); return f;
+    },
+    async straighten(run, f) {               // a disc that came out of a slim case upside down is turned upright (in its own plane)
+      if (!f._turned) return; f._turned = false;
+      await run.anim(f._d, [{ transform: 'rotate(180deg)' }, { transform: 'rotate(360deg)' }], 650);
+      f._d.style.transform = 'none';
+    },
+    // hand the disc to the player: it goes to just below the player, lined up with the slot, and the player slides it in
+    async mdHandIn(run, free) {
+      const stage = S.app.stage, target = stage && stage.recordRect && stage.recordRect();
+      if (!target || !target.width) return;
+      // straight down to the bottom of the player while the room is still dimmed, then the lights come up as the player takes it in
+      const r0 = free.getBoundingClientRect();
+      await run.anim(free, [T.px(r0), T.px(target)], 1300);
+      free.remove(); stage.hideRecord(false);
+      run.anim(run.shade, [{ opacity: 1 }, { opacity: 0 }], 700, 'ease');
+      await stage.finishArrive();
+    },
+    // retail case: like a CD jewel case (opens like a book, hinge on the left; the disc sits in the tray on the right)
+    // 3 1/3 x 4 5/16 x 5/8 in
+    async mdRetailCase(album, H) {
+      const mm = H / 109.5, W = 84.7 * mm, th = 15.9 * mm, lt = 5 * mm;
+      const wall = (side, z0, d, cls = '', w = W, h = H) => {
+        const n = el('div', { class: 'tr-wall ' + cls }), v = side === 't' || side === 'b';
+        n.style.cssText = v ? `left:0;width:${w}px;height:${d}px;top:${side === 't' ? 0 : h}px;margin-top:${-d / 2}px;transform:translateZ(${z0 + d / 2}px) rotateX(${side === 't' ? 90 : -90}deg)`
+                            : `top:0;height:${h}px;width:${d}px;left:${side === 'l' ? 0 : w}px;margin-left:${-d / 2}px;transform:translateZ(${z0 + d / 2}px) rotateY(${side === 'l' ? -90 : 90}deg)`;
+        return n;
+      };
+      const face = (cv, cls) => { const d = el('div', { class: 'tr-cface ' + cls }); d.append(cv); return d; };
+      const front = (await S.mdCaseArt(album)) || S.generic.cover(album.title, album.artist, 600);
+      // inside of the lid: the booklet seen from inside, through clear plastic
+      const ins = S.newCanvas(600, Math.round(600 * 109.5 / 84.7)), ix = ins.getContext('2d');
+      ix.fillStyle = 'rgba(225,232,240,.4)'; ix.beginPath(); ix.roundRect(0, 0, ins.width, ins.height, 10); ix.fill();
+      const cov = album.front ? await S.loadImage(album.front) : null;
+      ix.save(); ix.filter = 'brightness(.72) saturate(.85)'; S.drawCover(ix, cov || S.generic.cover(album.title, album.artist, 600), 10, 10, ins.width * 0.86, ins.height - 20); ix.restore();
+      const lidF = face(front, 'front'), lidB = face(ins, 'back'); lidB.style.transform = `translateZ(${-lt}px) rotateY(180deg)`;
+      const lid = el('div', { class: 'tr-lid' }, lidB, wall('l', -lt, lt, 'hinge'), wall('r', -lt, lt), wall('t', -lt, lt), wall('b', -lt, lt), lidF);
+      lid.style.transform = `translateZ(${th}px)`;
+      // the tray: black, ribbed hinge strip on the left, a moulded pocket the disc sits in
+      const tc = S.newCanvas(600, Math.round(600 * 109.5 / 84.7)), x = tc.getContext('2d'), TW = tc.width, TH = tc.height;
+      x.fillStyle = 'rgba(225,232,240,.35)'; x.beginPath(); x.roundRect(0, 0, TW, TH, 10); x.fill();
+      x.fillStyle = '#25272a'; x.beginPath(); x.roundRect(8, 8, TW - 16, TH - 16, 6); x.fill();
+      x.fillStyle = '#1b1d1f'; x.fillRect(8, 8, TW * 0.1, TH - 16); x.strokeStyle = '#ffffff12'; x.lineWidth = 2; for (let i = 14; i < TW * 0.1; i += 7) { x.beginPath(); x.moveTo(i, 12); x.lineTo(i, TH - 12); x.stroke(); }
+      const dw = 71.4 / 84.7 * TW, dh = 68.3 / 109.5 * TH, dx = TW * 0.555 - dw / 2, dy = TH / 2 - dh / 2;
+      x.fillStyle = '#141517'; x.beginPath(); x.roundRect(dx - 6, dy - 6, dw + 12, dh + 12, 8); x.fill(); x.strokeStyle = '#3a3d41'; x.lineWidth = 3; x.stroke();
+      x.fillStyle = '#2f3236'; for (const [cx, cy] of [[dx + dw * 0.5, dy - 4], [dx + dw * 0.5, dy + dh + 4]]) { x.beginPath(); x.roundRect(cx - 30, cy - 6, 60, 12, 4); x.fill(); }
+      const base = el('div', { class: 'tr-cbase' }, face(tc, 'tray'), wall('l', 0, th - lt, 'hinge'), wall('r', 0, th - lt), wall('t', 0, th - lt), wall('b', 0, th - lt));
+      const disc = el('div', { class: 'tr-cdisc md' }), DW = 71.4 * mm, DH = 68.3 * mm;
+      Object.assign(disc.style, { width: DW + 'px', height: DH + 'px', left: dx / TW * W + 'px', top: dy / TH * H + 'px', transform: 'translateZ(1px)' });
+      const box = el('div', { class: 'tr-case' }, base, disc, lid); box.style.width = W + 'px'; box.style.height = H + 'px';
+      return { box, lid, disc, W, H, th, hz: 32 * mm, open: `translateZ(${th}px) rotateY(-180deg)`, shut: `translateZ(${th}px) rotateY(0deg)` };
+    },
+    mdSize() { return Math.min(innerHeight * 0.58, innerWidth * 0.36 * 109.5 / 84.7); },
+    // a disc with its 3/16 in edge, for inside a case
+    async mdThick(holder, album, side) {
+      const d = await T.mdDisc(album, side), mm = holder.offsetWidth / 71.4 || parseFloat(holder.style.width) / 71.4, t = T.MDT * mm, col = T.mdEdge(album);
+      holder.style.transformStyle = 'preserve-3d';
+      const w = parseFloat(holder.style.width), h = parseFloat(holder.style.height);
+      const wall = (side_) => { const n = el('div', { class: 'tr-wall' }), v = side_ === 't' || side_ === 'b'; n.style.background = col;
+        n.style.cssText += v ? `;left:0;width:${w}px;height:${t}px;top:${side_ === 't' ? 0 : h}px;margin-top:${-t / 2}px;transform:translateZ(${t / 2}px) rotateX(${side_ === 't' ? 90 : -90}deg)` : `;top:0;height:${h}px;width:${t}px;left:${side_ === 'l' ? 0 : w}px;margin-left:${-t / 2}px;transform:translateZ(${t / 2}px) rotateY(${side_ === 'l' ? -90 : 90}deg)`; return n; };
+      Object.assign(d.style, { position: 'absolute', inset: 0, transform: `translateZ(${t}px)` });
+      holder.append(wall('l'), wall('r'), wall('t'), wall('b'), d);
+    },
+    async mdOut(album, from, load) {
+      if (S.releaseInfo(album, 'md').case === 'small') return T.mdSlimOut(album, from, load);
+      const run = T.begin(0.6);
+      try {
+        const side = S.sidesOf(album.tracks)[0] || 'A', vw = innerWidth, vh = innerHeight, H = T.mdSize();
+        const jc = await T.mdRetailCase(album, H), W = jc.W; await T.mdThick(jc.disc, album, side);
+        const holder = el('div', { class: 'tr-holder' }); holder.append(jc.box); run.ov.append(holder);
+        const tilt = 'rotateX(32deg) rotateY(-6deg)', at = (x, y, s, r = '') => `translate(${x - W / 2}px,${y - H / 2}px) scale(${s}) ${r}`;
+        const fx = from.left + from.width / 2, fy = from.top + from.height / 2;
+        run.anim(run.shade, [{ opacity: 0 }, { opacity: 1 }], 900, 'ease');
+        // the case comes forward, slides right while the lid swings open to the left on its hinge
+        await run.anim(holder, [{ transform: at(fx, fy, from.width / W) }, { transform: at(vw / 2, vh / 2, 1, tilt) }], 1400);
+        await run.wait(200);
+        run.anim(holder, [{ transform: at(vw / 2, vh / 2, 1, tilt) }, { transform: at(vw / 2 + W / 2, vh / 2, 1, tilt) }], 1500);
+        await run.anim(jc.lid, [{ transform: jc.shut }, { transform: jc.open }], 1500);
+        await run.wait(250);
+        // the disc is lifted out of the tray, the case closes and drops away
+        await run.anim(jc.disc, [{ transform: 'translateZ(1px)' }, { transform: `translateZ(${jc.hz}px)` }], 800, 'cubic-bezier(.3,0,.3,1)');
+        jc.disc.style.transform = `translateZ(${jc.hz}px)`;
+        const rr = jc.disc.getBoundingClientRect(), free = await T.mdFree(album, side, rr); run.ov.append(free); jc.disc.style.visibility = 'hidden';
+        run.anim(jc.lid, [{ transform: jc.open }, { transform: jc.shut }], 1300);
+        run.anim(holder, [{ transform: at(vw / 2 + W / 2, vh / 2, 1, tilt), opacity: 1 }, { transform: at(vw / 2 + W / 2, vh / 2, 1, tilt), opacity: 1, offset: 0.55 }, { transform: at(vw / 2 + W / 2, vh * 0.85, 0.85, tilt), opacity: 0 }], 1700, 'cubic-bezier(.5,0,.6,1)');
+        if (S.app.stage) S.app.stage.quiet = true;
+        await load();
+        await T.mdHandIn(run, free);
+      } finally { run.end(); }
+    },
+    async mdTakeOut(stage, album, side) {     // the player slides the disc out of the bottom; returns it as a free disc there
+      await stage.prepTake();
+      const target = stage.recordRect(), free = await T.mdFree(album, side, target);
+      stage.finishTake(); return { free, target };
+    },
+    async mdBack(album) {
+      const stage = S.app.stage; if (!stage || !stage.recordRect) return;
+      if (S.releaseInfo(album, 'md').case === 'small') return T.mdSlimBack(album);
+      const side = stage.currentSide ? stage.currentSide() : 'A';
+      const { free, target } = await T.mdTakeOut(stage, album, side);
+      const run = T.begin(0.54);
+      try {
+        run.ov.append(free);
+        const vw = innerWidth, vh = innerHeight, H = T.mdSize();
+        const lift = { left: target.left, top: target.top - target.height * 0.6, width: target.width, height: target.height };
+        run.anim(run.shade, [{ opacity: 0 }, { opacity: 1 }], 900, 'ease');
+        await run.anim(free, [T.px(target), T.px(lift)], 800);
+        const jc = await T.mdRetailCase(album, H), W = jc.W; await T.mdThick(jc.disc, album, side); jc.disc.style.visibility = 'hidden';
+        const holder = el('div', { class: 'tr-holder' }); holder.append(jc.box); run.ov.append(holder, free);
+        const tilt = 'rotateX(32deg) rotateY(-6deg)', at = (x, y, s, r = '') => `translate(${x - W / 2}px,${y - H / 2}px) scale(${s}) ${r}`;
+        holder.style.transform = at(vw / 2 + W / 2, vh / 2, 1, tilt); jc.lid.style.transform = jc.open;
+        jc.disc.style.transform = `translateZ(${jc.hz}px)`; const high = jc.disc.getBoundingClientRect(); jc.disc.style.transform = 'translateZ(1px)';
+        run.anim(jc.lid, [{ transform: jc.shut }, { transform: jc.shut, offset: 0.35 }, { transform: jc.open }], 1500);
+        run.anim(holder, [{ transform: at(vw / 2 + W / 2, vh * 0.9, 0.85, tilt), opacity: 0 }, { transform: at(vw / 2 + W / 2, vh / 2, 1, tilt), opacity: 1 }], 1200);
+        await run.anim(free, [T.px(lift), { ...T.px(high), offset: 0.85 }, T.px(high)], 1500);
+        jc.disc.style.transform = `translateZ(${jc.hz}px)`; jc.disc.style.visibility = ''; free.remove();
+        await run.anim(jc.disc, [{ transform: `translateZ(${jc.hz}px)` }, { transform: 'translateZ(1px)' }], 900, 'cubic-bezier(.3,0,.25,1)');
+        jc.disc.style.transform = 'translateZ(1px)';
+        await run.wait(200);
+        run.anim(holder, [{ transform: at(vw / 2 + W / 2, vh / 2, 1, tilt) }, { transform: at(vw / 2, vh / 2, 1, tilt) }], 1400);
+        await run.anim(jc.lid, [{ transform: jc.open }, { transform: jc.shut }], 1400);
+        await run.wait(250);
+        const lb = document.getElementById('btnLibrary'), b = lb ? lb.getBoundingClientRect() : { left: vw - 200, top: 0, width: 80, height: 30 };
+        run.anim(run.shade, [{ opacity: 1 }, { opacity: 0 }], 1300, 'ease');
+        await run.anim(holder, [{ transform: at(vw / 2, vh / 2, 1, tilt), opacity: 1 }, { transform: at(vw / 2, vh * 0.42, 0.8), opacity: 1, offset: 0.45 }, { transform: at(b.left + b.width / 2, b.top + b.height / 2, 0.05), opacity: 0.2 }], 1700, 'cubic-bezier(.5,0,.5,1)');
+        if (lb) lb.animate([{ filter: 'brightness(1)' }, { filter: 'brightness(1.8)' }, { filter: 'brightness(1)' }], { duration: 500 });
+      } finally { run.end(); }
+    },
+    // slim case: works like the cassette case (J-card wrapped round it, the clear pocket tips open, the disc slides out)
+    async mdSlimOut(album, from, load) {
+      const run = T.begin(0.52);
+      try {
+        const vw = innerWidth, vh = innerHeight, P = T.SPEC.md, Hc = Math.min(vh * 0.42, vw * 0.4 * P.H / P.W);
+        const tc = await T.tapeCase(album, Hc, false), W = tc.Wc;
+        const holder = el('div', { class: 'tr-holder' }); holder.append(tc.box); run.ov.append(holder);
+        const at = (x, y, s, r = '') => `translate(${x - W / 2}px,${y - Hc / 2}px) scale(${s}) ${r}`;
+        const fx = from.left + from.width / 2, fy = from.top + from.height / 2, cx = vw / 2, cy = vh * 0.56;
+        run.anim(run.shade, [{ opacity: 0 }, { opacity: 1 }], 900, 'ease');
+        await run.anim(holder, [{ transform: at(fx, fy, from.width / Hc, 'rotateY(180deg)') }, { transform: at(cx, cy, 1, 'rotateX(10deg) rotateY(180deg)'), offset: 0.55 }, { transform: at(cx, cy, 1, T.TT) }], 2000);
+        await run.anim(tc.box, [{ transform: 'rotateZ(-90deg)' }, { transform: 'rotateZ(0deg)' }], 900, 'cubic-bezier(.4,0,.2,1)');
+        tc.box.style.transform = 'rotateZ(0deg)';
+        await run.wait(100);
+        await run.anim(tc.door, [{ transform: tc.doorAt(0) }, { transform: tc.doorAt(-82) }], 1200, 'cubic-bezier(.4,0,.2,1)');
+        await run.anim(tc.tape, [{ transform: tc.rest }, { transform: tc.slid, offset: 0.55 }, { transform: tc.lifted }], 1300, 'cubic-bezier(.35,0,.25,1)');
+        tc.tape.style.transform = tc.lifted;
+        const rr = tc.tape.getBoundingClientRect(), free = await T.mdFree(album, tc.side, rr, true); run.ov.append(free); tc.tape.style.visibility = 'hidden';
+        run.anim(tc.door, [{ transform: tc.doorAt(-82) }, { transform: tc.doorAt(0) }], 1000);
+        run.anim(holder, [{ transform: at(cx, cy, 1, T.TT), opacity: 1 }, { transform: at(cx, cy, 1, T.TT), opacity: 1, offset: 0.5 }, { transform: at(cx, vh * 0.95, 0.85, T.TT), opacity: 0 }], 1600, 'cubic-bezier(.5,0,.6,1)');
+        if (S.app.stage) S.app.stage.quiet = true;
+        const loaded = load();
+        await T.straighten(run, free);
+        await loaded;
+        await T.mdHandIn(run, free);
+      } finally { run.end(); }
+    },
+    async mdSlimBack(album) {
+      const stage = S.app.stage, side = stage.currentSide ? stage.currentSide() : 'A';
+      const { free, target } = await T.mdTakeOut(stage, album, side);
+      const run = T.begin(0.48);
+      try {
+        run.ov.append(free);
+        const vw = innerWidth, vh = innerHeight, P = T.SPEC.md, Hc = Math.min(vh * 0.42, vw * 0.4 * P.H / P.W);
+        const lift = { left: target.left, top: target.top - target.height * 0.6, width: target.width, height: target.height };
+        run.anim(run.shade, [{ opacity: 0 }, { opacity: 1 }], 900, 'ease');
+        await run.anim(free, [T.px(target), T.px(lift)], 800);
+        const tc = await T.tapeCase(album, Hc, false), W = tc.Wc;
+        const holder = el('div', { class: 'tr-holder' }); holder.append(tc.box); run.ov.append(holder, free);
+        const at = (x, y, s, r = '') => `translate(${x - W / 2}px,${y - Hc / 2}px) scale(${s}) ${r}`, cx = vw / 2, cy = vh * 0.56;
+        holder.style.transform = at(cx, cy, 1, T.TT); tc.box.style.transform = 'rotateZ(0deg)'; tc.door.style.transform = tc.doorAt(-82); tc.tape.style.transform = tc.lifted;
+        const high = tc.tape.getBoundingClientRect(); tc.tape.style.visibility = 'hidden';
+        run.anim(tc.door, [{ transform: tc.doorAt(0) }, { transform: tc.doorAt(0), offset: 0.35 }, { transform: tc.doorAt(-82) }], 1500);
+        run.anim(holder, [{ transform: at(cx, vh * 0.95, 0.85, T.TT), opacity: 0 }, { transform: at(cx, cy, 1, T.TT), opacity: 1 }], 1200);
+        // carried over the open case and turned upside down to match how it lies in the case
+        await run.anim(free, [T.px(lift), { ...T.px(high), offset: 0.8 }, T.px(high)], 1300);
+        await run.anim(free._d, [{ transform: 'rotate(0deg)' }, { transform: 'rotate(180deg)' }], 520);      // turned upside down, as it sits in the case
+        free._d.style.transform = 'rotate(180deg)';
+        tc.tape.style.visibility = ''; free.remove();
+        await run.anim(tc.tape, [{ transform: tc.lifted }, { transform: tc.slid, offset: 0.45 }, { transform: tc.rest }], 1300, 'cubic-bezier(.35,0,.25,1)');
+        tc.tape.style.transform = tc.rest;
+        await run.anim(tc.door, [{ transform: tc.doorAt(-82) }, { transform: tc.doorAt(0) }], 1000, 'cubic-bezier(.4,0,.2,1)');
+        await run.anim(tc.box, [{ transform: 'rotateZ(0deg)' }, { transform: 'rotateZ(-90deg)' }], 800, 'cubic-bezier(.4,0,.2,1)');
+        tc.box.style.transform = 'rotateZ(-90deg)';
+        await run.anim(holder, [{ transform: at(cx, cy, 1, T.TT) }, { transform: at(cx, cy, 1, 'rotateX(8deg) rotateY(180deg)') }], 1100);
+        const lb = document.getElementById('btnLibrary'), b = lb ? lb.getBoundingClientRect() : { left: vw - 200, top: 0, width: 80, height: 30 };
+        run.anim(run.shade, [{ opacity: 1 }, { opacity: 0 }], 1300, 'ease');
+        await run.anim(holder, [{ transform: at(cx, cy, 1, 'rotateX(8deg) rotateY(180deg)'), opacity: 1 }, { transform: at(b.left + b.width / 2, b.top + b.height / 2, 0.05, 'rotateY(180deg)'), opacity: 0.2 }], 1500, 'cubic-bezier(.5,0,.5,1)');
+        if (lb) lb.animate([{ filter: 'brightness(1)' }, { filter: 'brightness(1.8)' }, { filter: 'brightness(1)' }], { duration: 500 });
+      } finally { run.end(); }
+    },
     cassetteOut(a, f, l) { return T.tapeOut(a, f, l); },
     microOut(a, f, l) { return T.tapeOut(a, f, l); },
     microBack(a) { return T.tapeBack(a); },
-    cassetteBack(a) { return T.tapeBack(a); }
+    cassetteBack(a) { return T.tapeBack(a); },
+    datOut(a, f, l) { return T.tapeOut(a, f, l); },
+    datBack(a) { return T.tapeBack(a); }
   };
   S.transit = T;
 })();

@@ -126,7 +126,7 @@
     build() {
       const e = S.el;
       this.deck = e('div', { class: 'deck mc-deck' });
-      this.art = e('div', { class: 'mc-art' }, e('img', { src: A + 'micro/deck-front.png', draggable: 'false', alt: '' }));
+      this.art = e('div', { class: 'mc-art' }, S.skin.bind(e('img', { draggable: 'false', alt: '' }), A + 'micro/deck-front.png').el);
       // spindles inside the compartment (they show through the hubs of a loaded tape)
       this.spL = this.spindle(hub.L); this.spR = this.spindle(hub.R);
       // the tape
@@ -136,10 +136,12 @@
       this.edges = ['l', 'r', 't', 'b'].map(k => e('div', { class: 'cas-edge ' + k }));
       this.flipper.append(...this.edges, ...this.slots); this.stageEl.append(this.flipper);
       // the door
-      this.door = e('div', { class: 'mc-door' });
+      this.door = e('div', { class: 'mc-door' }); S.skin.bind(this.door, A + 'micro/door.png', 'bg');
       this.lcd = S.newCanvas(1504, 396); this.lcd.className = 'deck-live';        // peak meter (2x of 752 x 198 units)
       this.ctr = S.newCanvas(368, 128); this.ctr.className = 'deck-live';          // tape counter
-      const key = (title, cls, fn) => { const k = e('button', { class: 'mc-key ' + cls, title, onclick: fn }, e('i')); return k; };
+      const ICON = { prev: ['◀◀', 'PREV'], next: ['▶▶', 'NEXT'], rec: ['●', 'REC'], play: ['▶', 'PLAY'], stop: ['■', 'STOP'], pause: ['❚❚', 'PAUSE'], flip: ['⟲', 'FLIP'] };
+      // the icon and the name are printed on the key itself
+      const key = (title, cls, fn) => { const [ic, nm] = ICON[cls] || ['', '']; return e('button', { class: 'mc-key ' + cls, title, onclick: fn }, e('i', {}, e('b', {}, ic), e('span', {}, nm))); };
       this.keyEls = [
         key('Previous track', 'prev', () => S.app.prev()), key('Next track', 'next', () => S.app.next()), key('Record (playback only)', 'rec', () => S.toast('This deck plays back only')),
         key('Play', 'play', () => S.app.togglePlay()), key('Stop', 'stop', () => S.app.stop()), key('Pause', 'pause', () => { if (!S.app.audio.paused) S.app.audio.pause(); }),

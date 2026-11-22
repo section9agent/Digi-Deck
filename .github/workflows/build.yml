@@ -1,3 +1,12 @@
+# Builds Digi-Deck for Windows, Linux and macOS, then puts everything in one draft GitHub release.
+# Runs when you push a version tag (git tag v2.0.0 && git push origin v2.0.0), or by hand from the Actions tab ("Run workflow").
+#
+#   Windows : installer (.exe), portable .exe                                  - x64
+#   Linux   : AppImage (works on SteamOS / Steam Deck) and .deb                - x64
+#   macOS   : .dmg and .zip, one for Apple Silicon (arm64) and one for Intel (x64)
+#
+# The macOS builds are not signed (no Apple developer certificate), so the first time a Mac user opens the app they need to
+# right-click it > Open (or System Settings > Privacy & Security > Open Anyway).
 name: Build & draft release
 
 on:
@@ -13,27 +22,63 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest]  # add ubuntu-latest, macos-latest once the app is polished
+        include:
+          - name: windows
+            os: windows-latest
+            args: --win --x64
+          - name: linux
+            os: ubuntu-latest
+            args: --linux --x64
+          - name: mac-arm64
+            os: macos-latest          # Apple Silicon runner
+            args: --mac --arm64
+            arch: arm64
+          - name: mac-x64
+            os: macos-latest          # cross-built for Intel Macs (FFmpeg is fetched for x64 below)
+            args: --mac --x64
+            arch: x64
+    name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-      - run: npm install
-      - run: npm test
-      - name: Package
-        run: npx electron-builder --win --x64 --publish never
+
+      - name: Install
+        run: npm install
         env:
-          CSC_IDENTITY_AUTO_DISCOVERY: false
+          # ffmpeg-static downloads an FFmpeg binary for the machine it installs on; for the Intel Mac build it must be the x64 one
+          npm_config_arch: ${{ matrix.arch }}
+
+      - name: FFmpeg for the target Mac
+        if: matrix.arch != ''
+        run: |
+          rm -f node_modules/ffmpeg-static/ffmpeg
+          npm_config_arch=${{ matrix.arch }} npm rebuild ffmpeg-static
+          file node_modules/ffmpeg-static/ffmpeg
+
+      - run: npm test
+
+      - name: Package
+        run: npx electron-builder ${{ matrix.args }} --publish never
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: false      # no code signing
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - uses: actions/upload-artifact@v4
         with:
-          name: digi-deck-${{ matrix.os }}
+          name: digi-deck-${{ matrix.name }}
           path: |
             dist/*.exe
+            dist/*.AppImage
+            dist/*.deb
+            dist/*.dmg
+            dist/*.zip
             dist/*.blockmap
-            dist/latest.yml
+            dist/latest*.yml
           if-no-files-found: error
 
   release:
@@ -41,13 +86,31 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/download-artifact@v4
         with:
           path: artifacts
-          merge-multiple: true
+
+      # the two Mac builds each write latest-mac.yml; merge them so auto-update finds both the arm64 and the x64 files
+      - name: Merge latest-mac.yml
+        run: |
+          set -e
+          mkdir -p out
+          find artifacts -type f ! -name 'latest-mac.yml' -exec cp {} out/ \;
+          A=artifacts/digi-deck-mac-arm64/latest-mac.yml; X=artifacts/digi-deck-mac-x64/latest-mac.yml
+          if [ -f "$A" ] && [ -f "$X" ]; then
+            node -e '
+              const fs = require("fs"), [a, x] = process.argv.slice(1).map(f => fs.readFileSync(f, "utf8"));
+              const files = t => t.split(/\n(?=  - url:)/).slice(1).join("\n").split(/\npath:/)[0];
+              const head = a.split("\nfiles:")[0], tail = a.slice(a.indexOf("\npath:"));
+              fs.writeFileSync("out/latest-mac.yml", head + "\nfiles:\n" + files(a).trimEnd() + "\n" + files(x).trimEnd() + tail);
+            ' "$A" "$X"
+          elif [ -f "$A" ]; then cp "$A" out/; elif [ -f "$X" ]; then cp "$X" out/; fi
+          ls -la out
+
       - uses: softprops/action-gh-release@v2
         with:
           draft: true
           name: Digi-Deck ${{ github.ref_name }}
           body_path: RELEASE_NOTES.md
-          files: artifacts/*
+          files: out/*

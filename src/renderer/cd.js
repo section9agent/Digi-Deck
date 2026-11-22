@@ -47,8 +47,8 @@
       this.win.append(this.well); this.logo = logo;
 
       this.lcd = e('div', { class: 'cdp-lcd' },
-        e('div', { class: 'lcd-l' }, this.lcdLab = e('span', { class: 'lcd-lab' }, 'TRACK'), this.lcdTrack = e('span', { class: 'lcd-big' }, '--'), this.lcdOf = e('span', { class: 'lcd-of' }, '/--')),
-        e('div', { class: 'lcd-r' }, e('span', { class: 'lcd-lab' }, 'TIME'), this.lcdTime = e('span', { class: 'lcd-big' }, '0:00'), this.lcdRpm = e('span', { class: 'lcd-of' }, '')));
+        e('div', { class: 'lcd-l' }, this.lcdLab = e('span', { class: 'lcd-lab' }, 'TRACK'), this.lcdTrack = e('span', { class: 'lcd-big seg7', 'data-ghost': '88' }, '--'), this.lcdOf = e('span', { class: 'lcd-of' }, '/--')),
+        e('div', { class: 'lcd-r' }, e('span', { class: 'lcd-lab' }, 'TIME'), this.lcdTime = e('span', { class: 'lcd-big seg7', 'data-ghost': '88:88' }, '!0:00'), this.lcdRpm = e('span', { class: 'lcd-of' }, '')));
       const round = (cls, t, title, fn, label) => e('div', { class: 'cdp-rkey ' + cls }, e('button', { class: 'cdp-round', title, onclick: fn }, t), label ? e('span', { class: 'cdp-print' }, label) : null);
       this.stopKey = round('stop', '■', 'Stop', () => S.app.stop(), 'STOP');
       this.ejectKey = round('eject', '⏏', 'Eject - put in the next disc', () => S.app.manualSwap(), 'EJECT · NEXT DISC');
@@ -58,7 +58,7 @@
       const svg = sv('svg', { class: 'cdp-moon', viewBox: '-4 -4 208 112' });
       const defs = sv('defs');
       defs.innerHTML = '<linearGradient id="cdpSeg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9a9fa6"/><stop offset=".5" stop-color="#6f747b"/><stop offset="1" stop-color="#555a60"/></linearGradient>'
-        + '<radialGradient id="cdpDome" cx=".42" cy=".25" r=".9"><stop offset="0" stop-color="#e9ecef"/><stop offset=".45" stop-color="#a9aeb4"/><stop offset="1" stop-color="#5d6268"/></radialGradient>'
+        + '<radialGradient id="cdpDome" cx=".42" cy=".25" r=".9"><stop offset="0" stop-color="#dff0f9"/><stop offset=".45" stop-color="#70c3ed"/><stop offset="1" stop-color="#3b6e8a"/></radialGradient>'
         + '<linearGradient id="cdpRim" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a3d42"/><stop offset="1" stop-color="#15171a"/></linearGradient>';
       svg.append(defs, sv('path', { d: 'M -2 102 A 102 102 0 0 1 202 102 Z', fill: 'url(#cdpRim)' }));
       const P = (r, a) => [100 + r * Math.cos(a), 102 - r * Math.sin(a)].map(v => v.toFixed(2)).join(' ');
@@ -152,10 +152,11 @@
       const tr = this.album ? this.album.tracks : [], multi = (this.discs || []).length > 1;
       const onDisc = multi ? tr.map((t, i) => i).filter(i => tr[i].side === this.disc) : tr.map((t, i) => i);
       const pos = onDisc.indexOf(st.trackIndex);
-      this.lcdTrack.textContent = st.trackIndex >= 0 && pos >= 0 ? String(pos + 1).padStart(2, '0') : '--';
+      const seg = (el, t) => { if (el._t !== t) { el._t = t; el.textContent = t.replace(/ /g, '!'); el.dataset.ghost = t.replace(/[0-9\- ]/g, '8'); } };
+      seg(this.lcdTrack, st.trackIndex >= 0 && pos >= 0 ? String(pos + 1).padStart(2, '0') : '--');
       this.lcdOf.textContent = '/' + String(onDisc.length).padStart(2, '0');
       if (this.lcdLab) this.lcdLab.textContent = multi ? `DISC ${S.SIDE_LETTERS.indexOf(this.disc) + 1}/${this.discs.length}  TRACK` : 'TRACK';
-      this.lcdTime.textContent = S.fmt(st.trackTime || 0);
+      seg(this.lcdTime, S.fmt(st.trackTime || 0).padStart(5, ' '));
       this.lcdRpm.textContent = this.spin > 0.05 ? `${Math.round(this.rpm * this.spin)} RPM` : '';
       this.root.classList.toggle('playing', st.playing);
     }
